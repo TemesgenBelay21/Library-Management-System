@@ -51,6 +51,63 @@ final class AdminController extends Controller
             'categories' => $book->categories(),
             'perPage' => $perPage,
             'flashMessages' => $this->pullFlashMessages(),
+            'pageScripts' => ['js/catalog.js'],
+        ]);
+    }
+
+    public function searchBooks(array $params = []): string
+    {
+        if (strtoupper($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'GET') {
+            return $this->json(['message' => 'Method not allowed.'], 405);
+        }
+
+        $query = $this->catalogTextQuery('q');
+        $queryLength = function_exists('mb_strlen') ? mb_strlen($query, 'UTF-8') : strlen($query);
+
+        if ($queryLength === 1) {
+            return $this->json([
+                'query' => $query,
+                'minimum' => true,
+                'total' => 0,
+                'available' => 0,
+                'copies' => 0,
+                'html' => '',
+            ]);
+        }
+
+        $normalizedQuery = function_exists('mb_substr') ? mb_substr($query, 0, 120) : substr($query, 0, 120);
+        $perPage = (int) $this->catalogTextQuery('per_page', (string) DEFAULT_PER_PAGE);
+        $perPage = in_array($perPage, [12, 24, 48], true) ? $perPage : DEFAULT_PER_PAGE;
+        $catalog = (new Book())->paginate([
+            'q' => $normalizedQuery,
+            'category' => $this->catalogTextQuery('category'),
+            'status' => $this->catalogTextQuery('status'),
+            'availability' => $this->catalogTextQuery('availability'),
+            'sort' => $this->catalogTextQuery('sort', 'title'),
+            'page' => max(1, (int) $this->catalogTextQuery('page', '1')),
+        ], $perPage);
+        $available = 0;
+        $copies = 0;
+
+        foreach ($catalog['items'] as $book) {
+            $available += (int) $book['available_copies'];
+            $copies += (int) $book['total_copies'];
+        }
+
+        $filtersActive = $catalog['query'] !== ''
+            || $catalog['category'] !== ''
+            || $catalog['status'] !== ''
+            || $catalog['availability'] !== ''
+            || $catalog['sort'] !== 'newest'
+            || $perPage !== DEFAULT_PER_PAGE;
+
+        return $this->json([
+            'query' => $query,
+            'minimum' => false,
+            'total' => (int) $catalog['total'],
+            'available' => $available,
+            'copies' => $copies,
+            'html' => $this->view('admin/books/_results', compact('catalog', 'perPage', 'filtersActive')),
         ]);
     }
 
