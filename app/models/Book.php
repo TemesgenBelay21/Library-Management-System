@@ -1,0 +1,124 @@
+<?php
+
+declare(strict_types=1);
+
+require_once dirname(__DIR__) . '/models/Model.php';
+
+final class Book extends Model
+{
+    private const SORT_OPTIONS = [
+        'title' => 'books.title ASC',
+        'author' => 'books.author ASC',
+        'category' => 'books.category ASC, books.title ASC',
+        'newest' => 'books.created_at DESC, books.id DESC',
+        'availability' => 'books.available_copies DESC, books.title ASC',
+    ];
+
+    public function paginate(array $filters = [], int $perPage = DEFAULT_PER_PAGE): array
+    {
+        $perPage = max(1, min(MAX_PER_PAGE, $perPage));
+        $page = max(1, (int) ($filters['page'] ?? 1));
+        $where = [];
+        $parameters = [];
+        $query = isset($filters['q']) ? trim((string) $filters['q']) : '';
+        $category = isset($filters['category']) ? trim((string) $filters['category']) : '';
+        $status = isset($filters['status']) ? trim((string) $filters['status']) : '';
+        $availability = isset($filters['availability']) ? trim((string) $filters['availability']) : '';
+
+        if ($query !== '') {
+            $where[] = '(books.title LIKE :title_search OR books.author LIKE :author_search OR books.isbn LIKE :isbn_search)';
+            $parameters['title_search'] = '%' . $query . '%';
+            $parameters['author_search'] = '%' . $query . '%';
+            $parameters['isbn_search'] = '%' . $query . '%';
+        }
+
+        if ($category !== '') {
+            $where[] = 'books.category = :category';
+            $parameters['category'] = $category;
+        }
+
+        if (in_array($status, ['available', 'checked_out'], true)) {
+            $where[] = 'books.status = :status';
+            $parameters['status'] = $status;
+        }
+
+        if ($availability === 'available') {
+            $where[] = 'books.available_copies > 0';
+        } elseif ($availability === 'unavailable') {
+            $where[] = 'books.available_copies = 0';
+        }
+
+        $whereSql = $where === [] ? '' : ' WHERE ' . implode(' AND ', $where);
+        $countRecord = $this->fetchOne('SELECT COUNT(*) AS total FROM books' . $whereSql, $parameters) ?: [];
+        $total = (int) ($countRecord['total'] ?? 0);
+        $lastPage = max(1, (int) ceil($total / $perPage));
+        $page = min($page, $lastPage);
+        $offset = ($page - 1) * $perPage;
+        $sort = isset($filters['sort']) && isset(self::SORT_OPTIONS[$filters['sort']])
+            ? self::SORT_OPTIONS[$filters['sort']]
+            : self::SORT_OPTIONS['newest'];
+        $items = $this->fetchAll(
+            'SELECT
+                books.id,
+                books.title,
+                books.author,
+                books.isbn,
+                books.category,
+                books.description,
+                books.cover_image,
+                books.total_copies,
+                books.available_copies,
+                books.status,
+                books.shelf_location,
+                books.published_year,
+                books.created_at,
+                books.updated_at,
+                (SELECT COUNT(*) FROM transactions WHERE transactions.book_id = books.id AND transactions.status IN (\'issued\', \'overdue\')) AS active_loans
+             FROM books' . $whereSql . '
+             ORDER BY ' . $sort . '
+             LIMIT ' . $perPage . ' OFFSET ' . $offset,
+            $parameters
+        );
+
+        return [
+            'items' => $items,
+            'total' => $total,
+            'page' => $page,
+            'per_page' => $perPage,
+            'last_page' => $lastPage,
+            'from' => $total === 0 ? 0 : $offset + 1,
+            'to' => min($total, $offset + $perPage),
+            'query' => $query,
+            'category' => $category,
+            'status' => $status,
+            'availability' => $availability,
+            'sort' => isset(self::SORT_OPTIONS[$filters['sort'] ?? '']) ? (string) $filters['sort'] : 'newest',
+        ];
+    }
+
+    public function categories(): array
+    {
+        return $this->fetchAll(
+            'SELECT category, COUNT(*) AS title_count, COALESCE(SUM(total_copies), 0) AS copy_count
+             FROM books
+             GROUP BY category
+             ORDER BY category ASC'
+        );
+    }
+
+    public function find(int $id): ?array
+    {
+        if ($id < 1) {
+            return null;
+        }
+
+        return $this->fetchOne(
+            'SELECT books.*,
+                (SELECT COUNT(*) FROM transactions WHERE transactions.book_id = books.id AND transactions.status IN (\'issued\', \'overdue\')) AS active_loans
+             FROM books
+             WHERE books.id = :id
+             LIMIT 1',
+            ['id' => $id]
+        );
+    }
+}
