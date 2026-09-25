@@ -6,11 +6,6 @@ require_once dirname(__DIR__) . '/models/User.php';
 
 abstract class Controller
 {
-    private const ROLE_GUARDS = [
-        'AdminController' => 'admin',
-        'MemberController' => 'member',
-    ];
-
     protected string $viewPath;
 
     protected array $sharedData = [];
@@ -35,6 +30,7 @@ abstract class Controller
             'isMember' => $this->hasRole('member'),
             'currentRoute' => $this->currentRoute(),
             'csrfToken' => $this->csrfToken(),
+            'roleNavigation' => $this->navigationForRole(),
         ], $sharedData);
     }
 
@@ -154,7 +150,15 @@ abstract class Controller
 
     protected function homeForRole(string $role): string
     {
-        return $role === 'admin' ? url('admin') : url('member');
+        $homes = $this->contextMap()['homes'];
+        $context = array_key_exists($role, $homes) ? $role : 'guest';
+
+        return url((string) $homes[$context]);
+    }
+
+    protected function canAccess(string $permission): bool
+    {
+        return in_array($permission, $this->navigationForRole(), true);
     }
 
     protected function flash(string $type, string $message): void
@@ -252,21 +256,53 @@ abstract class Controller
 
     private function enforceControllerRole(): void
     {
-        $requiredRole = self::ROLE_GUARDS[get_class($this)] ?? null;
+        $context = $this->contextMap();
+        $requiredRole = $context['controller_roles'][get_class($this)] ?? null;
 
-        if ($requiredRole === null || $this->hasRole($requiredRole)) {
+        if ($requiredRole === null || $this->hasRole((string) $requiredRole)) {
             return;
         }
 
         if (!$this->isAuthenticated()) {
             $this->flash('warning', 'Sign in to continue.');
-            $this->redirect(url('login'));
+            $this->redirect($this->homeForRole('guest'));
         } else {
             $this->flash('danger', 'You do not have access to that area.');
             $this->redirect($this->homeForRole($this->authRole));
         }
 
         $this->dispatchBlocked = true;
+    }
+
+    private function contextMap(): array
+    {
+        static $context = null;
+
+        if ($context === null) {
+            $path = CONFIG_PATH . DIRECTORY_SEPARATOR . 'redirects.php';
+            $context = is_file($path) ? require $path : null;
+
+            if (
+                !is_array($context)
+                || !isset($context['homes'], $context['controller_roles'], $context['permissions'])
+                || !is_array($context['homes'])
+                || !is_array($context['controller_roles'])
+                || !is_array($context['permissions'])
+            ) {
+                throw new RuntimeException('Application context configuration is invalid.');
+            }
+        }
+
+        return $context;
+    }
+
+    private function navigationForRole(): array
+    {
+        $permissions = $this->contextMap()['permissions'];
+
+        return isset($permissions[$this->authRole]) && is_array($permissions[$this->authRole])
+            ? $permissions[$this->authRole]
+            : [];
     }
 
     private function currentRoute(): string
