@@ -113,12 +113,17 @@ final class BookCoverStorage
             throw new InvalidArgumentException('Invalid cover filename.');
         }
 
-        $path = STORAGE_PATH . DIRECTORY_SEPARATOR . 'book-covers' . DIRECTORY_SEPARATOR . $filename;
+        $path = $this->storagePath($filename);
 
         if (!is_file($path)) {
             throw new RuntimeException('The cover image could not be found.');
         }
 
         return $path;
+    }
+
+    private function storagePath(string $filename): string
+    {
+        return STORAGE_PATH . DIRECTORY_SEPARATOR . 'book-covers' . DIRECTORY_SEPARATOR . $filename;
     }
 }
