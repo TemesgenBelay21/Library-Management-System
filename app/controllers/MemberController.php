@@ -20,6 +20,7 @@ final class MemberController extends Controller
         return $this->render('member/dashboard', [
             'pageTitle' => 'My library',
             'pageDescription' => 'Your AuraLib loans, due dates, and reading history.',
+            'pageScripts' => ['js/dashboard.js'],
             'summary' => $summary,
             'activeLoans' => $activeLoans,
             'overdueLoans' => array_values(array_filter(
