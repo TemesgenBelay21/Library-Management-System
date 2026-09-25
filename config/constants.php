@@ -22,7 +22,6 @@ define('VIEW_PATH', APP_PATH . DIRECTORY_SEPARATOR . 'views');
 define('CONFIG_PATH', ROOT_PATH . DIRECTORY_SEPARATOR . 'config');
 define('PUBLIC_PATH', ROOT_PATH . DIRECTORY_SEPARATOR . 'public');
 define('STORAGE_PATH', ROOT_PATH . DIRECTORY_SEPARATOR . 'storage');
-define('UPLOAD_PATH', PUBLIC_PATH . DIRECTORY_SEPARATOR . 'uploads');
 define('SESSION_NAME', 'auralib_session');
 define('SESSION_IDLE_TIMEOUT', 7200);
 define('DEFAULT_PER_PAGE', 12);
@@ -45,12 +44,5 @@ if (!function_exists('asset')) {
     function asset(string $path): string
     {
         return url('assets/' . ltrim($path, '/'));
-    }
-}
-
-if (!function_exists('upload_url')) {
-    function upload_url(string $path): string
-    {
-        return url('uploads/' . ltrim($path, '/'));
     }
 }

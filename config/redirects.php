@@ -14,18 +14,4 @@ return [
         'AdminController' => 'admin',
         'MemberController' => 'member',
     ],
-    'permissions' => [
-        'admin' => [
-            'dashboard',
-            'books',
-            'transactions',
-            'overdue',
-            'members',
-        ],
-        'member' => [
-            'dashboard',
-            'catalog',
-            'history',
-        ],
-    ],
 ];

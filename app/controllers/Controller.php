@@ -30,7 +30,6 @@ abstract class Controller
             'isMember' => $this->hasRole('member'),
             'currentRoute' => $this->currentRoute(),
             'csrfToken' => $this->csrfToken(),
-            'roleNavigation' => $this->navigationForRole(),
         ], $sharedData);
     }
 
@@ -154,11 +153,6 @@ abstract class Controller
         $context = array_key_exists($role, $homes) ? $role : 'guest';
 
         return url((string) $homes[$context]);
-    }
-
-    protected function canAccess(string $permission): bool
-    {
-        return in_array($permission, $this->navigationForRole(), true);
     }
 
     protected function flash(string $type, string $message): void
@@ -292,25 +286,15 @@ abstract class Controller
 
             if (
                 !is_array($context)
-                || !isset($context['homes'], $context['controller_roles'], $context['permissions'])
+                || !isset($context['homes'], $context['controller_roles'])
                 || !is_array($context['homes'])
                 || !is_array($context['controller_roles'])
-                || !is_array($context['permissions'])
             ) {
                 throw new RuntimeException('Application context configuration is invalid.');
             }
         }
 
         return $context;
-    }
-
-    private function navigationForRole(): array
-    {
-        $permissions = $this->contextMap()['permissions'];
-
-        return isset($permissions[$this->authRole]) && is_array($permissions[$this->authRole])
-            ? $permissions[$this->authRole]
-            : [];
     }
 
     private function currentRoute(): string
