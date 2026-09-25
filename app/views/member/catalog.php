@@ -2,7 +2,11 @@
 
 declare(strict_types=1);
 
-$catalog = $catalog;
+$page = (int) $catalog['page'];
+$lastPage = (int) $catalog['last_page'];
+$windowStart = max(1, $page - 2);
+$windowEnd = min($lastPage, $windowStart + 4);
+$windowStart = max(1, $windowEnd - 4);
 $catalogUrl = function (array $overrides = []) use ($catalog, $perPage): string {
     $query = ['q' => $catalog['query'], 'category' => $catalog['category'], 'sort' => $catalog['sort'], 'per_page' => $perPage, 'page' => $catalog['page']];
     foreach ($overrides as $key => $value) {
@@ -97,4 +101,25 @@ $catalogUrl = function (array $overrides = []) use ($catalog, $perPage): string 
             </article>
         <?php endforeach; ?>
     </section>
+    <?php if ($lastPage > 1) : ?>
+        <nav class="pagination-wrap" aria-label="Catalog pages">
+            <?php if ($page > 1) : ?>
+                <a class="pagination-link" href="<?= htmlspecialchars($catalogUrl(['page' => $page - 1]), ENT_QUOTES, 'UTF-8') ?>" aria-label="Previous page">←</a>
+            <?php else : ?>
+                <span class="pagination-link is-disabled" aria-disabled="true">←</span>
+            <?php endif; ?>
+            <?php for ($pageNumber = $windowStart; $pageNumber <= $windowEnd; $pageNumber++) : ?>
+                <?php if ($pageNumber === $page) : ?>
+                    <span class="pagination-link is-current" aria-current="page"><?= $pageNumber ?></span>
+                <?php else : ?>
+                    <a class="pagination-link" href="<?= htmlspecialchars($catalogUrl(['page' => $pageNumber]), ENT_QUOTES, 'UTF-8') ?>"><?= $pageNumber ?></a>
+                <?php endif; ?>
+            <?php endfor; ?>
+            <?php if ($page < $lastPage) : ?>
+                <a class="pagination-link" href="<?= htmlspecialchars($catalogUrl(['page' => $page + 1]), ENT_QUOTES, 'UTF-8') ?>" aria-label="Next page">→</a>
+            <?php else : ?>
+                <span class="pagination-link is-disabled" aria-disabled="true">→</span>
+            <?php endif; ?>
+        </nav>
+    <?php endif; ?>
 <?php endif; ?>
