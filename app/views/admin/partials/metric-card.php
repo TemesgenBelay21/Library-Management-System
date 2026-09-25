@@ -3,7 +3,6 @@
 declare(strict_types=1);
 
 $progress = isset($metric['progress']) && $metric['progress'] !== null ? max(0, min(100, (int) $metric['progress'])) : null;
-$degrees = $progress === null ? 0 : (int) round($progress * 3.6);
 $iconPaths = [
     'books' => '<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>',
     'copies' => '<rect x="7" y="7" width="13" height="13" rx="2"></rect><path d="M4 17V5a2 2 0 0 1 2-2h12"></path>',
@@ -24,12 +23,6 @@ $iconPaths = [
     <strong class="metric-value" data-metric-display><?= number_format((int) $metric['value']) ?></strong>
     <div class="metric-footer">
         <span><?= htmlspecialchars((string) $metric['detail'], ENT_QUOTES, 'UTF-8') ?></span>
-        <?php if ($progress !== null) : ?>
-            <span class="metric-ring" style="--metric-degrees: <?= $degrees ?>deg" aria-label="<?= $progress ?> percent">
-                <i><?= $progress ?>%</i>
-            </span>
-        <?php else : ?>
-            <span class="metric-spark" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
-        <?php endif; ?>
+        <span class="metric-visual" data-metric-visual data-progress="<?= $progress === null ? '' : $progress ?>" aria-label="<?= $progress === null ? 'Live metric visualization' : $progress . ' percent' ?>"></span>
     </div>
 </article>
