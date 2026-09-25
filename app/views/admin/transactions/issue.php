@@ -59,7 +59,14 @@ $hasFilters = $bookQuery !== '' || $memberQuery !== '';
         <?php if ($books === [] && $hasFilters) : ?>
             <p class="form-hint">No available book matches this filter. Clear it to see the whole catalogue.</p>
         <?php endif; ?>
-        <label class="form-field"><span>Member</span><select class="form-control" name="member_id" required>
+        <div class="form-field">
+            <label class="form-label" for="member_search">Find a member</label>
+            <input class="form-control" type="search" id="member_search" data-issue-search
+                data-issue-endpoint="<?= url('admin/members/search') ?>" data-issue-collection="members"
+                data-issue-target="member_id" placeholder="Search by name or email" autocomplete="off">
+            <p class="form-hint" data-issue-status role="status" aria-live="polite"></p>
+            <label class="form-label" for="member_id">Selected member</label>
+            <select class="form-control" name="member_id" id="member_id" data-issue-select required>
                 <option value="">Choose an active member</option>
                 <?php foreach ($members as $member): ?>
                     <option value="<?= (int) $member['id'] ?>" <?= (int) $old['member_id'] === (int) $member['id'] ? ' selected' : '' ?>>
@@ -67,7 +74,8 @@ $hasFilters = $bookQuery !== '' || $memberQuery !== '';
                         <?= htmlspecialchars((string) $member['email'], ENT_QUOTES, 'UTF-8') ?>
                     </option>
                 <?php endforeach; ?>
-            </select></label>
+            </select>
+        </div>
         <?php if ($members === [] && $hasFilters) : ?>
             <p class="form-hint">No active member matches this filter. Clear it to see every member.</p>
         <?php endif; ?>

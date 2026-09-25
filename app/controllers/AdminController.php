@@ -420,6 +420,7 @@ final class AdminController extends Controller
         return $this->render('admin/transactions/issue', [
             'pageTitle' => 'Issue a book',
             'pageDescription' => 'Create a circulation record for an active member.',
+            'pageScripts' => ['js/issue.js'],
             'books' => $transactionModel->issueableBooks($bookQuery),
             'members' => (new User())->searchActiveMembers($memberQuery),
             'bookQuery' => $bookQuery,
