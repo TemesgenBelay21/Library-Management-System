@@ -96,6 +96,32 @@ final class Book extends Model
         ];
     }
 
+    public function create(array $data, ?string $coverImage = null): int
+    {
+        return $this->transaction(function (PDO $database) use ($data, $coverImage): int {
+            $statement = $database->prepare(
+                'INSERT INTO books
+                    (title, author, isbn, category, description, cover_image, total_copies, available_copies, status, shelf_location, published_year)
+                 VALUES
+                    (:title, :author, :isbn, :category, :description, :cover_image, :total_copies, :available_copies, \'available\', :shelf_location, :published_year)'
+            );
+            $statement->execute([
+                'title' => (string) $data['title'],
+                'author' => (string) $data['author'],
+                'isbn' => $data['isbn'] !== '' ? (string) $data['isbn'] : null,
+                'category' => (string) $data['category'],
+                'description' => $data['description'] !== '' ? (string) $data['description'] : null,
+                'cover_image' => $coverImage,
+                'total_copies' => (int) $data['total_copies'],
+                'available_copies' => (int) $data['total_copies'],
+                'shelf_location' => $data['shelf_location'] !== '' ? (string) $data['shelf_location'] : null,
+                'published_year' => $data['published_year'] !== null ? (int) $data['published_year'] : null,
+            ]);
+
+            return (int) $database->lastInsertId();
+        });
+    }
+
     public function categories(): array
     {
         return $this->fetchAll(
