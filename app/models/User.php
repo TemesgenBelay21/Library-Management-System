@@ -6,6 +6,12 @@ require_once __DIR__ . '/Model.php';
 
 final class User extends Model
 {
+    private const PASSWORD_OPTIONS = [
+        'cost' => 12,
+    ];
+
+    private const DUMMY_PASSWORD_HASH = '$2y$12$//LCHZvSvzLDItu.yXgFk.21JqAKJkTmARfhTcblf81Idb443CpOq';
+
     public function findByEmail(string $email): ?array
     {
         return $this->fetchOne(
@@ -68,6 +74,51 @@ final class User extends Model
             ['email' => $this->normalizeEmail($email)],
             0
         ) > 0;
+    }
+
+    public function hashPassword(string $password): string
+    {
+        if (strlen($password) > 72) {
+            throw new InvalidArgumentException('Passwords cannot exceed 72 bytes.');
+        }
+
+        $hash = password_hash($password, PASSWORD_BCRYPT, self::PASSWORD_OPTIONS);
+
+        if (!is_string($hash)) {
+            throw new RuntimeException('Unable to hash the password.');
+        }
+
+        return $hash;
+    }
+
+    public function verifyPassword(string $password, string $hash): bool
+    {
+        return password_verify($password, $hash);
+    }
+
+    public function authenticate(string $email, string $password): ?array
+    {
+        $user = $this->findByEmail($email);
+        $hash = is_array($user) && isset($user['password']) ? (string) $user['password'] : self::DUMMY_PASSWORD_HASH;
+        $passwordIsValid = $this->verifyPassword($password, $hash);
+
+        if (!$passwordIsValid || !is_array($user) || $user['status'] !== 'active') {
+            return null;
+        }
+
+        if (password_needs_rehash($hash, PASSWORD_BCRYPT, self::PASSWORD_OPTIONS)) {
+            $this->execute(
+                'UPDATE users SET password = :password WHERE id = :id',
+                [
+                    'password' => $this->hashPassword($password),
+                    'id' => (int) $user['id'],
+                ]
+            );
+        }
+
+        unset($user['password']);
+
+        return $user;
     }
 
     private function normalizeEmail(string $email): string
