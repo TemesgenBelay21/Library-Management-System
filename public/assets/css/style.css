@@ -502,6 +502,18 @@ h4 {
     color: var(--text-soft);
 }
 
+.button-ghost {
+    border-color: transparent;
+    background: transparent;
+    color: var(--muted);
+}
+
+.button-ghost:hover {
+    border-color: var(--border);
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--text-soft);
+}
+
 .button-danger {
     border-color: rgba(251, 113, 133, 0.22);
     background: var(--danger-soft);
@@ -828,6 +840,36 @@ h4 {
     grid-column: 1 / -1;
 }
 
+.form-field {
+    display: grid;
+    gap: 7px;
+}
+
+.form-field > span {
+    color: var(--text-soft);
+    font-size: 0.74rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+}
+
+.form-panel {
+    max-width: 620px;
+    padding: 24px;
+}
+
+.stack-form {
+    display: grid;
+    gap: 18px;
+}
+
+.form-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    padding-top: 4px;
+}
+
 .form-label {
     color: var(--text-soft);
     font-size: 0.74rem;
@@ -907,6 +949,15 @@ textarea.form-control {
     box-shadow: var(--shadow-sm);
     backdrop-filter: blur(18px);
     -webkit-backdrop-filter: blur(18px);
+}
+
+.table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.table-wrap .data-table {
+    min-width: 720px;
 }
 
 .data-table {
@@ -2357,6 +2408,67 @@ textarea.form-control {
 
 .text-success { color: var(--success); }
 .text-warning { color: var(--warning); }
+.text-danger { color: var(--danger); }
+
+.detail-panel {
+    display: grid;
+    gap: 22px;
+    padding: 26px;
+}
+
+.detail-heading {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    padding-bottom: 18px;
+    border-bottom: 1px solid var(--border);
+}
+
+.detail-heading h2 {
+    margin: 6px 0 4px;
+    font-size: 1.12rem;
+    letter-spacing: -0.01em;
+}
+
+.detail-heading p {
+    color: var(--muted);
+    font-size: 0.78rem;
+}
+
+.detail-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 18px 24px;
+    margin: 0;
+}
+
+.detail-grid > div {
+    display: grid;
+    gap: 5px;
+    align-content: start;
+}
+
+.detail-grid dt {
+    color: var(--muted);
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+}
+
+.detail-grid dd {
+    margin: 0;
+    color: var(--text);
+    font-size: 0.86rem;
+    font-weight: 500;
+    word-break: break-word;
+}
+
+.detail-panel form {
+    padding-top: 4px;
+}
 
 .detail-list {
     display: grid;
