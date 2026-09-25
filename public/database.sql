@@ -27,11 +27,12 @@ CREATE TABLE IF NOT EXISTS books (
     status ENUM('available', 'checked_out') NOT NULL DEFAULT 'available',
     shelf_location VARCHAR(80) NULL,
     published_year SMALLINT UNSIGNED NULL,
+    deleted_at DATETIME NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (id),
     UNIQUE KEY books_isbn_unique (isbn),
-    KEY books_category_status_index (category, status),
+    KEY books_category_status_index (category, status, deleted_at),
     KEY books_title_index (title),
     KEY books_author_index (author)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

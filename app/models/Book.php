@@ -18,7 +18,7 @@ final class Book extends Model
     {
         $perPage = max(1, min(MAX_PER_PAGE, $perPage));
         $page = max(1, (int) ($filters['page'] ?? 1));
-        $where = [];
+        $where = ['books.deleted_at IS NULL'];
         $parameters = [];
         $query = isset($filters['q']) ? trim((string) $filters['q']) : '';
         $category = isset($filters['category']) ? trim((string) $filters['category']) : '';
@@ -130,7 +130,7 @@ final class Book extends Model
 
         return $this->transaction(function (PDO $database) use ($id, $data, $coverImage): bool {
             $bookStatement = $database->prepare(
-                'SELECT id FROM books WHERE id = :id FOR UPDATE'
+                'SELECT id FROM books WHERE id = :id AND deleted_at IS NULL FOR UPDATE'
             );
             $bookStatement->execute(['id' => $id]);
             $book = $bookStatement->fetch();
@@ -167,7 +167,8 @@ final class Book extends Model
                      status = :status,
                      shelf_location = :shelf_location,
                      published_year = :published_year
-                 WHERE id = :id'
+                 WHERE id = :id
+                   AND deleted_at IS NULL'
             );
             $statement->execute([
                 'id' => $id,
@@ -188,11 +189,63 @@ final class Book extends Model
         });
     }
 
+    public function delete(int $id): ?array
+    {
+        if ($id < 1) {
+            return null;
+        }
+
+        return $this->transaction(function (PDO $database) use ($id): ?array {
+            $bookStatement = $database->prepare(
+                'SELECT id, cover_image
+                 FROM books
+                 WHERE id = :id
+                   AND deleted_at IS NULL
+                 FOR UPDATE'
+            );
+            $bookStatement->execute(['id' => $id]);
+            $book = $bookStatement->fetch();
+
+            if (!is_array($book)) {
+                return null;
+            }
+
+            $loanStatement = $database->prepare(
+                'SELECT COUNT(*)
+                 FROM transactions
+                 WHERE book_id = :book_id
+                   AND status IN (\'issued\', \'overdue\')'
+            );
+            $loanStatement->execute(['book_id' => $id]);
+            $activeLoans = (int) $loanStatement->fetchColumn();
+
+            if ($activeLoans > 0) {
+                throw new DomainException('Books with active loans must be returned before deletion.');
+            }
+
+            $statement = $database->prepare(
+                'UPDATE books
+                 SET deleted_at = CURRENT_TIMESTAMP
+                 WHERE id = :id
+                   AND deleted_at IS NULL'
+            );
+            $statement->execute(['id' => $id]);
+
+            return [
+                'id' => $id,
+                'cover_image' => isset($book['cover_image']) && is_string($book['cover_image'])
+                    ? $book['cover_image']
+                    : null,
+            ];
+        });
+    }
+
     public function categories(): array
     {
         return $this->fetchAll(
             'SELECT category, COUNT(*) AS title_count, COALESCE(SUM(total_copies), 0) AS copy_count
              FROM books
+             WHERE deleted_at IS NULL
              GROUP BY category
              ORDER BY category ASC'
         );
@@ -233,6 +286,7 @@ final class Book extends Model
                 (SELECT COUNT(*) FROM transactions WHERE transactions.book_id = books.id AND transactions.status IN (\'issued\', \'overdue\')) AS active_loans
              FROM books
              WHERE books.id = :id
+               AND books.deleted_at IS NULL
              LIMIT 1',
             ['id' => $id]
         );

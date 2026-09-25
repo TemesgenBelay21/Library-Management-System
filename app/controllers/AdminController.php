@@ -231,6 +231,44 @@ final class AdminController extends Controller
         return $this->redirect($editPath);
     }
 
+    public function deleteBook(array $params = []): string
+    {
+        if (strtoupper($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
+            return $this->redirect(url('admin/books'));
+        }
+
+        $id = isset($params['id']) ? (int) $params['id'] : 0;
+        $detailPath = url('admin/books/' . $id);
+
+        if (!$this->verifyCsrfToken($this->post('_token'))) {
+            $this->flash('danger', 'The delete form expired. Please try again.');
+
+            return $this->redirect($detailPath);
+        }
+
+        try {
+            $deletedBook = (new Book())->delete($id);
+        } catch (DomainException $exception) {
+            $this->flash('warning', $exception->getMessage());
+
+            return $this->redirect($detailPath);
+        }
+
+        if (!is_array($deletedBook)) {
+            $this->flash('danger', 'The requested book could not be found.');
+
+            return $this->redirect(url('admin/books'));
+        }
+
+        if (isset($deletedBook['cover_image']) && is_string($deletedBook['cover_image'])) {
+            (new BookCoverStorage())->delete($deletedBook['cover_image']);
+        }
+
+        $this->flash('success', 'The book was removed from the catalog.');
+
+        return $this->redirect(url('admin/books'));
+    }
+
     public function editBook(array $params = []): string
     {
         $id = isset($params['id']) ? (int) $params['id'] : 0;

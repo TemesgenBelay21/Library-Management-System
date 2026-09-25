@@ -10,9 +10,9 @@ final class Report extends Model
     {
         $record = $this->fetchOne(
             'SELECT
-                (SELECT COUNT(*) FROM books) AS total_books,
-                (SELECT COALESCE(SUM(total_copies), 0) FROM books) AS total_copies,
-                (SELECT COALESCE(SUM(available_copies), 0) FROM books) AS available_copies,
+                (SELECT COUNT(*) FROM books WHERE deleted_at IS NULL) AS total_books,
+                (SELECT COALESCE(SUM(total_copies), 0) FROM books WHERE deleted_at IS NULL) AS total_copies,
+                (SELECT COALESCE(SUM(available_copies), 0) FROM books WHERE deleted_at IS NULL) AS available_copies,
                 (SELECT COUNT(*) FROM users WHERE role = \'member\' AND status = \'active\') AS active_members,
                 (SELECT COUNT(*) FROM transactions WHERE status IN (\'issued\', \'overdue\')) AS active_loans,
                 (SELECT COUNT(*) FROM transactions WHERE status = \'overdue\') AS overdue_loans'
@@ -85,6 +85,7 @@ final class Report extends Model
                 COUNT(*) AS title_count,
                 COALESCE(SUM(total_copies), 0) AS copy_count
              FROM books
+             WHERE deleted_at IS NULL
              GROUP BY category
              ORDER BY copy_count DESC, category ASC
              LIMIT ' . $limit
