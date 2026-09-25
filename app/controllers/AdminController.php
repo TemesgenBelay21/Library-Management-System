@@ -400,13 +400,19 @@ final class AdminController extends Controller
             'sort' => $this->catalogTextQuery('sort'),
             'page' => max(1, (int) $this->catalogTextQuery('page', '1')),
         ];
+        $issueErrors = $this->pullTransactionErrors();
 
         return $this->render('admin/transactions/index', [
             'pageTitle' => 'Transactions',
             'pageDescription' => 'Monitor loans, returns, and circulation activity.',
+            'pageScripts' => ['js/issue.js'],
             'transactions' => $transactionModel->paginate($filters),
             'statistics' => $transactionModel->statistics(),
             'filters' => $filters,
+            'issueBooks' => $transactionModel->issueableBooks(),
+            'issueMembers' => (new User())->searchActiveMembers(),
+            'issueErrors' => $issueErrors,
+            'issueOld' => $this->pullTransactionOld(),
             'flashMessages' => $this->pullFlashMessages(),
         ]);
     }
@@ -454,7 +460,7 @@ final class AdminController extends Controller
             $_SESSION['transaction_errors'] = [$exception->getMessage()];
             $_SESSION['transaction_old'] = $old;
 
-            return $this->redirect(url('admin/transactions/issue'));
+            return $this->redirect(url('admin/transactions'));
         }
 
         $this->flash('success', 'The book was issued successfully.');

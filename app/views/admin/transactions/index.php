@@ -37,7 +37,8 @@ $transactionUrl = function (array $overrides = []) use ($query, $status, $sort, 
         <p class="page-subtitle">Track every issue, return, and overdue balance.</p>
     </div>
     <div class="page-actions">
-        <a class="button button-primary" href="<?= url('admin/transactions/issue') ?>">Issue a book</a>
+        <button class="button button-primary" type="button" data-drawer-open="issue-drawer"
+            aria-controls="issue-drawer" aria-expanded="false">Issue a book</button>
         <a class="button button-secondary" href="<?= url('admin/transactions/overdue') ?>">Overdue watch</a>
     </div>
 </section>
@@ -179,3 +180,31 @@ $transactionUrl = function (array $overrides = []) use ($query, $status, $sort, 
         </nav>
     <?php endif; ?>
 </section>
+<div class="drawer" id="issue-drawer" data-drawer="issue" aria-hidden="true" role="dialog" aria-modal="true"
+    aria-labelledby="issue-drawer-title">
+    <div class="drawer-panel">
+        <div class="drawer-header">
+            <div>
+                <span class="section-kicker">Circulation control</span>
+                <h2 class="drawer-title" id="issue-drawer-title">Issue a book</h2>
+            </div>
+            <button class="icon-button" type="button" data-drawer-close aria-label="Close issue panel">&times;</button>
+        </div>
+        <div class="drawer-body">
+            <?= $this->view('admin/transactions/_issue-form', [
+                'books' => $issueBooks,
+                'members' => $issueMembers,
+                'old' => $issueOld,
+                'errors' => $issueErrors,
+            ]) ?>
+        </div>
+    </div>
+</div>
+<?php if ($issueErrors !== []) : ?>
+    <script>
+        window.addEventListener('DOMContentLoaded', function () {
+            var trigger = document.querySelector('[data-drawer-open="issue-drawer"]');
+            window.AuraLib.openDrawer(document.getElementById('issue-drawer'), trigger);
+        });
+    </script>
+<?php endif; ?>
