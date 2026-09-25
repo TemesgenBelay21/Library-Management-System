@@ -111,6 +111,44 @@ final class AdminController extends Controller
         return $this->redirect(url('admin/books/' . $bookId));
     }
 
+    public function editBook(array $params = []): string
+    {
+        $id = isset($params['id']) ? (int) $params['id'] : 0;
+        $bookModel = new Book();
+        $book = $bookModel->find($id);
+
+        if (!is_array($book)) {
+            $this->flash('danger', 'The requested book could not be found.');
+
+            return $this->redirect(url('admin/books'));
+        }
+
+        $book = array_merge([
+            'title' => '',
+            'author' => '',
+            'isbn' => '',
+            'category' => '',
+            'description' => '',
+            'total_copies' => 1,
+            'available_copies' => 0,
+            'shelf_location' => '',
+            'published_year' => '',
+            'cover_image' => null,
+            'active_loans' => 0,
+        ], $book, $this->pullBookOld());
+
+        return $this->render('admin/books/edit', [
+            'pageTitle' => 'Edit ' . (string) $book['title'],
+            'pageDescription' => 'Update bibliographic and inventory details for this title.',
+            'book' => $book,
+            'categories' => $bookModel->categories(),
+            'minimumCopies' => max(1, (int) $book['active_loans']),
+            'hasCover' => is_string($book['cover_image']) && $book['cover_image'] !== '',
+            'errors' => $this->pullBookErrors(),
+            'flashMessages' => $this->pullFlashMessages(),
+        ]);
+    }
+
     public function createBook(array $params = []): string
     {
         $book = new Book();
