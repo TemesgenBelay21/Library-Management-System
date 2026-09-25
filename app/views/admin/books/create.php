@@ -105,7 +105,7 @@ declare(strict_types=1);
                 <span class="cover-upload-icon">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="3"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><path d="m21 15-5-5L5 21"></path></svg>
                 </span>
-                <span><strong>Choose a cover image</strong><small>JPEG, PNG, or WebP · minimum 200 × 200 · maximum 5 MB</small></span>
+                <span><strong>Choose a cover image</strong><small>JPEG, PNG, or WebP · minimum 200 × 200 · maximum 5 MB</small><small class="cover-upload-file" data-cover-filename></small></span>
                 <input id="book-cover" name="cover" type="file" accept="image/jpeg,image/png,image/webp" data-cover-input>
             </label>
         </div>

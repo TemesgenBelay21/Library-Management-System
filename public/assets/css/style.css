@@ -3174,6 +3174,15 @@ a.pagination-link:hover {
     font-size: 0.65rem;
 }
 
+.cover-upload-file:not(:empty) {
+    max-width: 34ch;
+    overflow: hidden;
+    color: var(--cyan);
+    font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 .cover-upload input {
     position: absolute;
     width: 1px;

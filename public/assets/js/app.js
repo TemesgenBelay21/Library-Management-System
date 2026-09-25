@@ -202,11 +202,75 @@
         }
     });
 
+    const describeSize = (bytes) => {
+        if (bytes < 1024) {
+            return `${bytes} B`;
+        }
+
+        if (bytes < 1024 * 1024) {
+            return `${Math.round(bytes / 1024)} KB`;
+        }
+
+        return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+    };
+
+    const initCoverInputs = () => {
+        document.querySelectorAll('[data-cover-input]').forEach((input) => {
+            if (!(input instanceof HTMLInputElement)) {
+                return;
+            }
+
+            const field = input.closest('.cover-upload');
+            const readout = field ? field.querySelector('[data-cover-filename]') : null;
+            const accepted = (input.getAttribute('accept') || '')
+                .split(',')
+                .map((type) => type.trim())
+                .filter((type) => type.length > 0);
+
+            const reset = () => {
+                if (readout instanceof HTMLElement) {
+                    readout.textContent = '';
+                }
+            };
+
+            input.addEventListener('change', () => {
+                const file = input.files && input.files[0];
+
+                if (!(file instanceof File) || file.size === 0) {
+                    reset();
+                    return;
+                }
+
+                if (file.size > 5 * 1024 * 1024) {
+                    input.value = '';
+                    reset();
+                    toast(`${file.name} is larger than the 5 MB limit.`, 'danger');
+                    return;
+                }
+
+                if (accepted.length > 0 && accepted.indexOf(file.type) === -1) {
+                    input.value = '';
+                    reset();
+                    toast(`${file.name} is not a supported image type.`, 'danger');
+                    return;
+                }
+
+                if (readout instanceof HTMLElement) {
+                    readout.textContent = `${file.name} · ${describeSize(file.size)}`;
+                }
+            });
+
+            input.addEventListener('input', reset);
+        });
+    };
+
     document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('[data-toast-message]').forEach((element) => {
             toast(element.dataset.toastMessage || '', element.dataset.toastType || 'info');
             element.remove();
         });
+
+        initCoverInputs();
     });
 
     window.AuraLib = Object.freeze({

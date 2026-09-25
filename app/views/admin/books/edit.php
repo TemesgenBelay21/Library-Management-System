@@ -113,7 +113,7 @@ declare(strict_types=1);
                     <span class="cover-upload-icon">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>
                     </span>
-                    <span><strong><?= $hasCover ? 'Choose a replacement' : 'Choose a cover image' ?></strong><small>JPEG, PNG, or WebP · maximum 5 MB</small></span>
+                    <span><strong><?= $hasCover ? 'Choose a replacement' : 'Choose a cover image' ?></strong><small>JPEG, PNG, or WebP · maximum 5 MB</small><small class="cover-upload-file" data-cover-filename></small></span>
                     <input id="book-cover" name="cover" type="file" accept="image/jpeg,image/png,image/webp" data-cover-input>
                 </label>
             </div>
