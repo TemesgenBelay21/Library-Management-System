@@ -109,7 +109,7 @@ foreach ($dashboard['circulationTrend'] as $trend) {
 
 <section class="metric-grid" aria-label="Library metrics">
     <?php foreach ($metrics as $metric) : ?>
-        <?php require VIEW_PATH . '/admin/partials/metric-card.php'; ?>
+        <?php require VIEW_PATH . '/partials/metric-card.php'; ?>
     <?php endforeach; ?>
 </section>
 

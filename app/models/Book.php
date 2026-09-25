@@ -275,6 +275,38 @@ final class Book extends Model
         );
     }
 
+    public function recommendedFor(int $userId, int $limit = 8): array
+    {
+        $limit = max(1, min(24, $limit));
+        $parameters = ['user_id' => $userId];
+
+        return $this->fetchAll(
+            'SELECT
+                books.id,
+                books.title,
+                books.author,
+                books.category,
+                books.cover_image,
+                books.total_copies,
+                books.available_copies,
+                books.shelf_location,
+                books.published_year
+             FROM books
+             WHERE books.deleted_at IS NULL
+               AND books.available_copies > 0
+               AND NOT EXISTS (
+                   SELECT 1
+                   FROM transactions
+                   WHERE transactions.book_id = books.id
+                     AND transactions.user_id = :user_id
+                     AND transactions.status IN (\'issued\', \'overdue\')
+               )
+             ORDER BY books.category ASC, books.title ASC
+             LIMIT ' . $limit,
+            $parameters
+        );
+    }
+
     public function find(int $id): ?array
     {
         if ($id < 1) {

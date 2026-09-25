@@ -2800,6 +2800,140 @@ a.pagination-link:hover {
     opacity: 0.3;
 }
 
+.loan-list {
+    display: grid;
+    gap: 10px;
+}
+
+.loan-row {
+    display: grid;
+    grid-template-columns: 46px minmax(0, 1fr) auto;
+    padding: 12px;
+    align-items: center;
+    gap: 16px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background: rgba(255, 255, 255, 0.016);
+    transition: transform var(--transition), border-color var(--transition), background var(--transition), box-shadow var(--transition);
+}
+
+.loan-row:hover {
+    transform: scale(1.02);
+    border-color: rgba(139, 92, 246, 0.28);
+    background: var(--primary-soft);
+    box-shadow: 0 18px 44px rgba(0, 0, 0, 0.28);
+}
+
+.loan-thumb {
+    display: block;
+    width: 46px;
+    height: 69px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: linear-gradient(145deg, rgba(139, 92, 246, 0.1), rgba(255, 255, 255, 0.015));
+    object-fit: cover;
+}
+
+.loan-thumb-placeholder {
+    display: grid;
+    place-content: center;
+    color: var(--muted);
+}
+
+.loan-thumb-placeholder svg {
+    width: 20px;
+    height: 20px;
+    opacity: 0.55;
+}
+
+.loan-meta {
+    display: grid;
+    min-width: 0;
+    gap: 4px;
+}
+
+.loan-meta strong {
+    overflow: hidden;
+    font-size: 0.88rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.loan-meta span {
+    overflow: hidden;
+    color: var(--muted);
+    font-size: 0.7rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.loan-due {
+    display: grid;
+    justify-items: end;
+    gap: 6px;
+}
+
+.loan-due-date {
+    color: var(--muted);
+    font-size: 0.64rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.recommendation-list {
+    display: grid;
+    margin: 0;
+    padding: 0;
+    gap: 2px;
+    list-style: none;
+}
+
+.recommendation-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    padding: 11px 12px;
+    align-items: center;
+    gap: 14px;
+    border: 1px solid transparent;
+    border-radius: 12px;
+    transition: transform var(--transition), border-color var(--transition), background var(--transition);
+}
+
+.recommendation-row:hover {
+    transform: scale(1.02);
+    border-color: rgba(139, 92, 246, 0.24);
+    background: var(--primary-soft);
+}
+
+.recommendation-meta {
+    display: grid;
+    min-width: 0;
+    gap: 3px;
+}
+
+.recommendation-meta strong {
+    overflow: hidden;
+    font-size: 0.82rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.recommendation-meta span {
+    overflow: hidden;
+    color: var(--muted);
+    font-size: 0.68rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.recommendation-stock {
+    color: var(--muted);
+    font-size: 0.66rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
 @media (max-width: 1080px) {
     .catalog-filter-form {
         grid-template-columns: minmax(220px, 1.4fr) repeat(3, minmax(125px, 1fr));
@@ -2992,6 +3126,25 @@ a.pagination-link:hover {
     .catalog-results-heading {
         align-items: flex-start;
         flex-direction: column;
+    }
+
+    .loan-row {
+        grid-template-columns: 42px minmax(0, 1fr);
+        gap: 12px;
+    }
+
+    .loan-due {
+        grid-column: 2;
+        justify-items: start;
+    }
+
+    .recommendation-row {
+        grid-template-columns: minmax(0, 1fr) auto;
+    }
+
+    .recommendation-stock {
+        grid-column: 2;
+        justify-self: end;
     }
 
     .book-admin-grid {
