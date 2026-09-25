@@ -6,6 +6,7 @@ final class Router
 {
     private const CONTROLLER_PATHS = [
         'AuthController' => '/../app/controllers/AuthController.php',
+        'BookController' => '/../app/controllers/BookController.php',
         'AdminController' => '/../app/controllers/AdminController.php',
         'MemberController' => '/../app/controllers/MemberController.php',
     ];
@@ -162,6 +163,7 @@ $routes = [
     ['method' => 'GET', 'path' => 'member/catalog', 'controller' => 'MemberController', 'action' => 'catalog'],
     ['method' => 'GET', 'path' => 'member/history', 'controller' => 'MemberController', 'action' => 'history'],
     ['method' => 'GET', 'path' => 'catalog', 'controller' => 'MemberController', 'action' => 'catalog'],
+    ['method' => 'GET', 'path' => 'catalog/{id}/cover', 'controller' => 'BookController', 'action' => 'cover'],
     ['method' => 'GET', 'path' => 'catalog/{id}', 'controller' => 'MemberController', 'action' => 'showBook'],
 ];
 

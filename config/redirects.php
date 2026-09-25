@@ -10,6 +10,7 @@ return [
     ],
     'controller_roles' => [
         'AuthController' => null,
+        'BookController' => 'authenticated',
         'AdminController' => 'admin',
         'MemberController' => 'member',
     ],

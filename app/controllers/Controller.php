@@ -259,7 +259,15 @@ abstract class Controller
         $context = $this->contextMap();
         $requiredRole = $context['controller_roles'][get_class($this)] ?? null;
 
-        if ($requiredRole === null || $this->hasRole((string) $requiredRole)) {
+        if ($requiredRole === null) {
+            return;
+        }
+
+        $authorized = $requiredRole === 'authenticated'
+            ? $this->isAuthenticated()
+            : $this->hasRole((string) $requiredRole);
+
+        if ($authorized) {
             return;
         }
 
