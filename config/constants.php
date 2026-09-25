@@ -19,6 +19,7 @@ define('CONFIG_PATH', ROOT_PATH . DIRECTORY_SEPARATOR . 'config');
 define('PUBLIC_PATH', ROOT_PATH . DIRECTORY_SEPARATOR . 'public');
 define('UPLOAD_PATH', PUBLIC_PATH . DIRECTORY_SEPARATOR . 'uploads');
 define('SESSION_NAME', 'auralib_session');
+define('SESSION_IDLE_TIMEOUT', 7200);
 define('DEFAULT_PER_PAGE', 12);
 define('MAX_PER_PAGE', 48);
 define('LOAN_DAYS', 14);

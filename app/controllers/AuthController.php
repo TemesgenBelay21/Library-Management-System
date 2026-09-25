@@ -8,15 +8,11 @@ final class AuthController extends Controller
 {
     public function home(array $params = []): string
     {
-        $this->beginSession();
-
         return $this->redirect(isset($_SESSION['user_id']) ? url('dashboard') : url('login'));
     }
 
     public function showLogin(array $params = []): string
     {
-        $this->beginSession();
-
         if (isset($_SESSION['user_id'])) {
             return $this->redirect(url('dashboard'));
         }
@@ -33,8 +29,6 @@ final class AuthController extends Controller
 
     public function login(array $params = []): string
     {
-        $this->beginSession();
-
         if (strtoupper($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
             return $this->redirect(url('login'));
         }
@@ -78,8 +72,6 @@ final class AuthController extends Controller
 
     public function showRegister(array $params = []): string
     {
-        $this->beginSession();
-
         if (isset($_SESSION['user_id'])) {
             return $this->redirect(url('dashboard'));
         }
@@ -96,8 +88,6 @@ final class AuthController extends Controller
 
     public function register(array $params = []): string
     {
-        $this->beginSession();
-
         if (strtoupper($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
             return $this->redirect(url('register'));
         }
@@ -158,7 +148,6 @@ final class AuthController extends Controller
 
     public function dashboard(array $params = []): string
     {
-        $this->beginSession();
         $role = (string) ($_SESSION['user_role'] ?? '');
 
         if (!isset($_SESSION['user_id']) || !in_array($role, ['admin', 'member'], true)) {
@@ -207,26 +196,6 @@ final class AuthController extends Controller
         $_SESSION['authenticated_at'] = time();
     }
 
-    private function beginSession(): void
-    {
-        if (session_status() === PHP_SESSION_ACTIVE) {
-            return;
-        }
-
-        $secure = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off';
-        session_name(SESSION_NAME);
-        session_set_cookie_params([
-            'lifetime' => 0,
-            'path' => '/',
-            'secure' => $secure,
-            'httponly' => true,
-            'samesite' => 'Lax',
-        ]);
-        ini_set('session.use_strict_mode', '1');
-        ini_set('session.use_only_cookies', '1');
-        session_start();
-    }
-
     private function failAuthentication(array $errors, array $old, string $redirectPath): string
     {
         $_SESSION['auth_errors'] = $errors;
@@ -255,26 +224,4 @@ final class AuthController extends Controller
         return $old;
     }
 
-    private function pullFlashMessages(): array
-    {
-        $messages = isset($_SESSION['flash_messages']) && is_array($_SESSION['flash_messages'])
-            ? $_SESSION['flash_messages']
-            : [];
-        unset($_SESSION['flash_messages']);
-
-        return $messages;
-    }
-
-    private function flash(string $type, string $message): void
-    {
-        $_SESSION['flash_messages'][] = [
-            'type' => $type,
-            'message' => $message,
-        ];
-    }
-
-    private function homeForRole(string $role): string
-    {
-        return $role === 'admin' ? url('admin') : url('member');
-    }
 }

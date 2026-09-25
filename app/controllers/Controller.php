@@ -2,16 +2,44 @@
 
 declare(strict_types=1);
 
+require_once dirname(__DIR__) . '/models/User.php';
+
 abstract class Controller
 {
+    private const ROLE_GUARDS = [
+        'AdminController' => 'admin',
+        'MemberController' => 'member',
+    ];
+
     protected string $viewPath;
 
     protected array $sharedData = [];
 
+    protected ?array $authUser = null;
+
+    protected string $authRole = '';
+
+    private bool $dispatchBlocked = false;
+
     public function __construct(array $sharedData = [])
     {
         $this->viewPath = dirname(__DIR__) . DIRECTORY_SEPARATOR . 'views';
-        $this->sharedData = $sharedData;
+        $this->beginSession();
+        $this->hydrateAuthentication();
+        $this->enforceControllerRole();
+        $this->sharedData = array_merge([
+            'authUser' => $this->authUser,
+            'authRole' => $this->authRole,
+            'isAuthenticated' => $this->isAuthenticated(),
+            'isAdmin' => $this->hasRole('admin'),
+            'isMember' => $this->hasRole('member'),
+            'currentRoute' => $this->currentRoute(),
+        ], $sharedData);
+    }
+
+    public function isDispatchBlocked(): bool
+    {
+        return $this->dispatchBlocked;
     }
 
     protected function render(string $view, array $data = [], ?string $layout = 'layouts/main'): string
@@ -46,8 +74,8 @@ abstract class Controller
 
     protected function redirect(string $path, int $status = 302): string
     {
-        if ($path === '' || $path[0] !== '/' || strpos($path, '//') === 0) {
-            throw new InvalidArgumentException('Redirect paths must be application-relative.');
+        if (!$this->isSafeRedirectPath($path)) {
+            throw new InvalidArgumentException('Redirect paths must target this application.');
         }
 
         http_response_code($status);
@@ -86,6 +114,168 @@ abstract class Controller
         }
 
         return (int) $value;
+    }
+
+    protected function isAuthenticated(): bool
+    {
+        return is_array($this->authUser);
+    }
+
+    protected function hasRole(string $role): bool
+    {
+        return $this->isAuthenticated() && hash_equals($this->authRole, $role);
+    }
+
+    protected function currentUserId(): int
+    {
+        return is_array($this->authUser) ? (int) $this->authUser['id'] : 0;
+    }
+
+    protected function homeForRole(string $role): string
+    {
+        return $role === 'admin' ? url('admin') : url('member');
+    }
+
+    protected function flash(string $type, string $message): void
+    {
+        if (session_status() !== PHP_SESSION_ACTIVE) {
+            return;
+        }
+
+        $allowedTypes = ['info', 'success', 'danger', 'warning'];
+        $flashType = in_array($type, $allowedTypes, true) ? $type : 'info';
+        $_SESSION['flash_messages'][] = [
+            'type' => $flashType,
+            'message' => $message,
+        ];
+    }
+
+    protected function pullFlashMessages(): array
+    {
+        $messages = isset($_SESSION['flash_messages']) && is_array($_SESSION['flash_messages'])
+            ? $_SESSION['flash_messages']
+            : [];
+        unset($_SESSION['flash_messages']);
+
+        return $messages;
+    }
+
+    private function beginSession(): void
+    {
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            return;
+        }
+
+        $secure = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off';
+        session_name(SESSION_NAME);
+        session_set_cookie_params([
+            'lifetime' => 0,
+            'path' => '/',
+            'secure' => $secure,
+            'httponly' => true,
+            'samesite' => 'Lax',
+        ]);
+        ini_set('session.use_strict_mode', '1');
+        ini_set('session.use_only_cookies', '1');
+        session_start();
+    }
+
+    private function hydrateAuthentication(): void
+    {
+        $userId = filter_var($_SESSION['user_id'] ?? null, FILTER_VALIDATE_INT);
+        $lastActivity = (int) ($_SESSION['last_activity'] ?? 0);
+
+        if ($userId === false || $userId < 1) {
+            $this->clearAuthentication();
+
+            return;
+        }
+
+        if ($lastActivity > 0 && time() - $lastActivity > SESSION_IDLE_TIMEOUT) {
+            $this->clearAuthentication();
+            $this->flash('warning', 'Your session expired. Please sign in again.');
+
+            return;
+        }
+
+        $userModel = new User();
+        $user = $userModel->findActiveById((int) $userId);
+
+        if (!is_array($user)) {
+            $this->clearAuthentication();
+            $this->flash('danger', 'This account is no longer active.');
+
+            return;
+        }
+
+        unset($user['password']);
+        $this->authUser = $user;
+        $this->authRole = (string) $user['role'];
+        $_SESSION['user_role'] = $this->authRole;
+        $_SESSION['user_status'] = (string) $user['status'];
+        $_SESSION['last_activity'] = time();
+    }
+
+    private function clearAuthentication(): void
+    {
+        unset(
+            $_SESSION['user_id'],
+            $_SESSION['user_role'],
+            $_SESSION['user_status'],
+            $_SESSION['authenticated_at'],
+            $_SESSION['last_activity']
+        );
+        $this->authUser = null;
+        $this->authRole = '';
+    }
+
+    private function enforceControllerRole(): void
+    {
+        $requiredRole = self::ROLE_GUARDS[get_class($this)] ?? null;
+
+        if ($requiredRole === null || $this->hasRole($requiredRole)) {
+            return;
+        }
+
+        if (!$this->isAuthenticated()) {
+            $this->flash('warning', 'Sign in to continue.');
+            $this->redirect(url('login'));
+        } else {
+            $this->flash('danger', 'You do not have access to that area.');
+            $this->redirect($this->homeForRole($this->authRole));
+        }
+
+        $this->dispatchBlocked = true;
+    }
+
+    private function currentRoute(): string
+    {
+        $requestPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
+        $requestPath = is_string($requestPath) ? trim($requestPath, '/') : '';
+        $basePath = parse_url(APP_URL, PHP_URL_PATH);
+        $basePath = is_string($basePath) ? trim($basePath, '/') : '';
+
+        if ($basePath !== '' && ($requestPath === $basePath || strpos($requestPath, $basePath . '/') === 0)) {
+            $requestPath = ltrim(substr($requestPath, strlen($basePath)), '/');
+        }
+
+        return $requestPath;
+    }
+
+    private function isSafeRedirectPath(string $path): bool
+    {
+        if ($path === '' || strpos($path, "\0") !== false || strpos($path, "\r") !== false || strpos($path, "\n") !== false) {
+            return false;
+        }
+
+        if ($path[0] === '/') {
+            return strpos($path, '//') !== 0;
+        }
+
+        $appHost = parse_url(APP_URL, PHP_URL_HOST);
+        $targetHost = parse_url($path, PHP_URL_HOST);
+
+        return is_string($appHost) && $appHost !== '' && hash_equals(strtolower($appHost), strtolower((string) $targetHost));
     }
 
     private function capture(string $view, array $data): string

@@ -46,6 +46,11 @@ final class Router
             }
 
             $controller = new $controllerName();
+
+            if ($controller->isDispatchBlocked()) {
+                return;
+            }
+
             $action = $route['action'];
 
             if (!method_exists($controller, $action)) {
