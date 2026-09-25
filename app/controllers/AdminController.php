@@ -111,6 +111,101 @@ final class AdminController extends Controller
         return $this->redirect(url('admin/books/' . $bookId));
     }
 
+    public function updateBook(array $params = []): string
+    {
+        if (strtoupper($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
+            return $this->redirect(url('admin/books'));
+        }
+
+        $id = isset($params['id']) ? (int) $params['id'] : 0;
+        $bookModel = new Book();
+        $currentBook = $bookModel->find($id);
+
+        if (!is_array($currentBook)) {
+            $this->flash('danger', 'The requested book could not be found.');
+
+            return $this->redirect(url('admin/books'));
+        }
+
+        if (!$this->verifyCsrfToken($this->post('_token'))) {
+            $this->flash('danger', 'The edit form expired. Please try again.');
+
+            return $this->redirect(url('admin/books/' . $id . '/edit'));
+        }
+
+        $data = $this->bookFormData();
+        $errors = $this->validateBookData($data);
+        $activeLoans = (int) ($currentBook['active_loans'] ?? 0);
+
+        if ((int) $data['total_copies'] < $activeLoans) {
+            $errors[] = 'Total copies cannot be lower than the ' . $activeLoans . ' active loans.';
+        }
+
+        $editPath = url('admin/books/' . $id . '/edit');
+
+        if ($errors !== []) {
+            return $this->failBookForm($errors, $data, $editPath);
+        }
+
+        $storage = new BookCoverStorage();
+        $upload = isset($_FILES['cover']) && is_array($_FILES['cover']) ? $_FILES['cover'] : [];
+        $removeCover = $this->bookPost('remove_cover') === '1';
+        $currentCover = isset($currentBook['cover_image']) && is_string($currentBook['cover_image'])
+            ? $currentBook['cover_image']
+            : null;
+        $newCover = null;
+        $targetCover = $currentCover;
+
+        try {
+            $newCover = $storage->store($upload);
+
+            if ($newCover !== null) {
+                $targetCover = $newCover;
+            } elseif ($removeCover) {
+                $targetCover = null;
+            }
+
+            if (!$bookModel->update($id, $data, $targetCover)) {
+                $storage->delete($newCover);
+                $this->flash('danger', 'The requested book could not be found.');
+
+                return $this->redirect(url('admin/books'));
+            }
+        } catch (PDOException $exception) {
+            $storage->delete($newCover);
+
+            if ((string) $exception->getCode() === '23000') {
+                return $this->failBookForm(['A book with that ISBN already exists.'], $data, $editPath);
+            }
+
+            throw $exception;
+        } catch (DomainException $exception) {
+            $storage->delete($newCover);
+
+            return $this->failBookForm([$exception->getMessage()], $data, $editPath);
+        } catch (InvalidArgumentException $exception) {
+            $storage->delete($newCover);
+
+            return $this->failBookForm([$exception->getMessage()], $data, $editPath);
+        } catch (RuntimeException $exception) {
+            $storage->delete($newCover);
+
+            return $this->failBookForm([$exception->getMessage()], $data, $editPath);
+        } catch (Throwable $exception) {
+            $storage->delete($newCover);
+
+            throw $exception;
+        }
+
+        if ($currentCover !== null && $currentCover !== $targetCover) {
+            $storage->delete($currentCover);
+        }
+
+        $this->flash('success', 'Book details were updated.');
+
+        return $this->redirect($editPath);
+    }
+
     public function editBook(array $params = []): string
     {
         $id = isset($params['id']) ? (int) $params['id'] : 0;

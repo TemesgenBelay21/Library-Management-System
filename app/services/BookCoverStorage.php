@@ -12,12 +12,12 @@ final class BookCoverStorage
         'image/webp' => 'webp',
     ];
 
-    public function store(array $upload, ?string $currentCover = null): ?string
+    public function store(array $upload): ?string
     {
         $error = isset($upload['error']) ? (int) $upload['error'] : UPLOAD_ERR_NO_FILE;
 
         if ($error === UPLOAD_ERR_NO_FILE) {
-            return $currentCover;
+            return null;
         }
 
         if ($error !== UPLOAD_ERR_OK) {
@@ -55,7 +55,6 @@ final class BookCoverStorage
         }
 
         @chmod($destination, 0640);
-        $this->delete($currentCover);
 
         return $filename;
     }

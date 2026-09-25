@@ -122,6 +122,72 @@ final class Book extends Model
         });
     }
 
+    public function update(int $id, array $data, ?string $coverImage): bool
+    {
+        if ($id < 1) {
+            return false;
+        }
+
+        return $this->transaction(function (PDO $database) use ($id, $data, $coverImage): bool {
+            $bookStatement = $database->prepare(
+                'SELECT id FROM books WHERE id = :id FOR UPDATE'
+            );
+            $bookStatement->execute(['id' => $id]);
+            $book = $bookStatement->fetch();
+
+            if (!is_array($book)) {
+                return false;
+            }
+
+            $loanStatement = $database->prepare(
+                'SELECT COUNT(*) AS active_loans
+                 FROM transactions
+                 WHERE book_id = :book_id
+                   AND status IN (\'issued\', \'overdue\')'
+            );
+            $loanStatement->execute(['book_id' => $id]);
+            $activeLoans = (int) $loanStatement->fetchColumn();
+            $totalCopies = (int) $data['total_copies'];
+
+            if ($totalCopies < $activeLoans) {
+                throw new DomainException('Total copies cannot be lower than the number of active loans.');
+            }
+
+            $availableCopies = $totalCopies - $activeLoans;
+            $statement = $database->prepare(
+                'UPDATE books
+                 SET title = :title,
+                     author = :author,
+                     isbn = :isbn,
+                     category = :category,
+                     description = :description,
+                     cover_image = :cover_image,
+                     total_copies = :total_copies,
+                     available_copies = :available_copies,
+                     status = :status,
+                     shelf_location = :shelf_location,
+                     published_year = :published_year
+                 WHERE id = :id'
+            );
+            $statement->execute([
+                'id' => $id,
+                'title' => (string) $data['title'],
+                'author' => (string) $data['author'],
+                'isbn' => $data['isbn'] !== '' ? (string) $data['isbn'] : null,
+                'category' => (string) $data['category'],
+                'description' => $data['description'] !== '' ? (string) $data['description'] : null,
+                'cover_image' => $coverImage,
+                'total_copies' => $totalCopies,
+                'available_copies' => $availableCopies,
+                'status' => $availableCopies > 0 ? 'available' : 'checked_out',
+                'shelf_location' => $data['shelf_location'] !== '' ? (string) $data['shelf_location'] : null,
+                'published_year' => $data['published_year'] !== null ? (int) $data['published_year'] : null,
+            ]);
+
+            return true;
+        });
+    }
+
     public function categories(): array
     {
         return $this->fetchAll(
