@@ -76,6 +76,21 @@ final class User extends Model
         ) > 0;
     }
 
+    public function createMember(string $name, string $email, string $passwordHash): int
+    {
+        $this->execute(
+            "INSERT INTO users (name, email, password, role, status)
+             VALUES (:name, :email, :password, 'member', 'active')",
+            [
+                'name' => trim($name),
+                'email' => $this->normalizeEmail($email),
+                'password' => $passwordHash,
+            ]
+        );
+
+        return $this->lastInsertId();
+    }
+
     public function hashPassword(string $password): string
     {
         if (strlen($password) > 72) {
