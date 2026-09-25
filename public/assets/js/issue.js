@@ -17,7 +17,8 @@
 
     const build = (input) => {
         const select = document.getElementById(input.dataset.issueTarget);
-        const status = input.form ? input.form.querySelector('[data-issue-status]') : null;
+        const field = input.closest('.form-field');
+        const status = field ? field.querySelector('[data-issue-status]') : null;
 
         if (!(select instanceof HTMLSelectElement) || typeof input.dataset.issueEndpoint !== 'string') {
             return null;

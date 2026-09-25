@@ -505,6 +505,17 @@ final class AdminController extends Controller
         ]);
     }
 
+    public function searchIssueableBooks(array $params = []): string
+    {
+        if (strtoupper($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'GET') {
+            return $this->json(['message' => 'Method not allowed.'], 405);
+        }
+
+        return $this->json([
+            'books' => (new Transaction())->issueableBooks($this->catalogTextQuery('q')),
+        ]);
+    }
+
     public function returnBook(array $params = []): string
     {
         if (strtoupper($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {

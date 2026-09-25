@@ -47,7 +47,14 @@ $hasFilters = $bookQuery !== '' || $memberQuery !== '';
 <section class="glass-panel form-panel">
     <form method="post" action="<?= url('admin/transactions/issue') ?>" class="stack-form">
         <input type="hidden" name="_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
-        <label class="form-field"><span>Book</span><select class="form-control" name="book_id" required>
+        <div class="form-field">
+            <label class="form-label" for="book_search">Find a book</label>
+            <input class="form-control" type="search" id="book_search" data-issue-search
+                data-issue-endpoint="<?= url('admin/transactions/issue/books') ?>" data-issue-collection="books"
+                data-issue-target="book_id" placeholder="Search by title or author" autocomplete="off">
+            <p class="form-hint" data-issue-status role="status" aria-live="polite"></p>
+            <label class="form-label" for="book_id">Selected book</label>
+            <select class="form-control" name="book_id" id="book_id" data-issue-select required>
                 <option value="">Choose an available book</option>
                 <?php foreach ($books as $book): ?>
                     <option value="<?= (int) $book['id'] ?>" <?= (int) $old['book_id'] === (int) $book['id'] ? ' selected' : '' ?>>
@@ -55,7 +62,8 @@ $hasFilters = $bookQuery !== '' || $memberQuery !== '';
                         <?= (int) $book['available_copies'] ?> available
                     </option>
                 <?php endforeach; ?>
-            </select></label>
+            </select>
+        </div>
         <?php if ($books === [] && $hasFilters) : ?>
             <p class="form-hint">No available book matches this filter. Clear it to see the whole catalogue.</p>
         <?php endif; ?>
