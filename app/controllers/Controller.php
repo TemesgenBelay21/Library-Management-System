@@ -34,6 +34,7 @@ abstract class Controller
             'isAdmin' => $this->hasRole('admin'),
             'isMember' => $this->hasRole('member'),
             'currentRoute' => $this->currentRoute(),
+            'csrfToken' => $this->csrfToken(),
         ], $sharedData);
     }
 
@@ -99,6 +100,26 @@ abstract class Controller
         $source = strtoupper($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' ? $_POST : $_GET;
 
         return array_key_exists($key, $source) ? $source[$key] : $default;
+    }
+
+    protected function csrfToken(): string
+    {
+        if (!isset($_SESSION['csrf_token']) || !is_string($_SESSION['csrf_token'])) {
+            $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+        }
+
+        return $_SESSION['csrf_token'];
+    }
+
+    protected function verifyCsrfToken($token): bool
+    {
+        if (!is_string($token) || $token === '' || !isset($_SESSION['csrf_token'])) {
+            return false;
+        }
+
+        $sessionToken = $_SESSION['csrf_token'];
+
+        return is_string($sessionToken) && hash_equals($sessionToken, $token);
     }
 
     protected function integerInput(string $key, int $default = 0): int

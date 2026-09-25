@@ -79,6 +79,7 @@ $flashMessages = isset($flashMessages) && is_array($flashMessages) ? $flashMessa
                 </div>
             <?php endif; ?>
             <form class="auth-form" method="post" action="<?= $isRegister ? url('register') : url('login') ?>">
+                <input type="hidden" name="_token" value="<?= htmlspecialchars((string) ($csrfToken ?? ''), ENT_QUOTES, 'UTF-8') ?>">
                 <?php if ($isRegister): ?>
                     <div class="form-group">
                         <label class="form-label" for="name">Full name</label>

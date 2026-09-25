@@ -37,6 +37,12 @@ final class AuthController extends Controller
             return $this->redirect(url('dashboard'));
         }
 
+        if (!$this->verifyCsrfToken($this->post('_token'))) {
+            $this->flash('danger', 'The form expired. Please try again.');
+
+            return $this->redirect(url('login'));
+        }
+
         $email = strtolower(trim((string) $this->post('email', '')));
         $password = (string) $this->post('password', '');
         $errors = [];
@@ -94,6 +100,12 @@ final class AuthController extends Controller
 
         if (isset($_SESSION['user_id'])) {
             return $this->redirect(url('dashboard'));
+        }
+
+        if (!$this->verifyCsrfToken($this->post('_token'))) {
+            $this->flash('danger', 'The form expired. Please try again.');
+
+            return $this->redirect(url('register'));
         }
 
         $name = trim((string) $this->post('name', ''));
