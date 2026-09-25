@@ -423,6 +423,18 @@ final class Transaction extends Model
 
     public function refreshOverdueStatuses(): int
     {
+        $pending = $this->fetchValue(
+            "SELECT 1
+             FROM transactions
+             WHERE status = 'issued'
+               AND due_at < NOW()
+             LIMIT 1"
+        );
+
+        if ($pending === null) {
+            return 0;
+        }
+
         $statement = $this->execute(
             "UPDATE transactions
              SET status = 'overdue',
