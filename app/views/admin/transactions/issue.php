@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 $old = array_merge(['book_id' => 0, 'member_id' => 0, 'loan_days' => LOAN_DAYS], $old);
+$hasFilters = $bookQuery !== '' || $memberQuery !== '';
 ?>
 <section class="page-header">
     <div>
@@ -24,6 +25,25 @@ $old = array_merge(['book_id' => 0, 'member_id' => 0, 'loan_days' => LOAN_DAYS],
     </div>
 <?php endif; ?>
 
+<section class="glass-panel catalog-filter-panel">
+    <form class="catalog-filter-form" method="get" action="<?= url('admin/transactions/issue') ?>">
+        <label class="filter-search">
+            <span class="sr-only">Filter available books</span>
+            <input class="form-control" type="search" name="book"
+                value="<?= htmlspecialchars($bookQuery, ENT_QUOTES, 'UTF-8') ?>" placeholder="Filter by title or author">
+        </label>
+        <label class="filter-search">
+            <span class="sr-only">Filter active members</span>
+            <input class="form-control" type="search" name="member"
+                value="<?= htmlspecialchars($memberQuery, ENT_QUOTES, 'UTF-8') ?>" placeholder="Filter by name or email">
+        </label>
+        <button class="button button-primary filter-submit" type="submit">Filter</button>
+        <?php if ($hasFilters) : ?>
+            <a class="button button-ghost" href="<?= url('admin/transactions/issue') ?>">Clear</a>
+        <?php endif; ?>
+    </form>
+</section>
+
 <section class="glass-panel form-panel">
     <form method="post" action="<?= url('admin/transactions/issue') ?>" class="stack-form">
         <input type="hidden" name="_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
@@ -36,6 +56,9 @@ $old = array_merge(['book_id' => 0, 'member_id' => 0, 'loan_days' => LOAN_DAYS],
                     </option>
                 <?php endforeach; ?>
             </select></label>
+        <?php if ($books === [] && $hasFilters) : ?>
+            <p class="form-hint">No available book matches this filter. Clear it to see the whole catalogue.</p>
+        <?php endif; ?>
         <label class="form-field"><span>Member</span><select class="form-control" name="member_id" required>
                 <option value="">Choose an active member</option>
                 <?php foreach ($members as $member): ?>
@@ -45,6 +68,9 @@ $old = array_merge(['book_id' => 0, 'member_id' => 0, 'loan_days' => LOAN_DAYS],
                     </option>
                 <?php endforeach; ?>
             </select></label>
+        <?php if ($members === [] && $hasFilters) : ?>
+            <p class="form-hint">No active member matches this filter. Clear it to see every member.</p>
+        <?php endif; ?>
         <label class="form-field"><span>Loan period in days</span><input class="form-control" type="number"
                 name="loan_days" min="1" max="365" value="<?= (int) $old['loan_days'] ?>" required></label>
         <div class="form-actions"><button class="button button-primary" type="submit">Confirm issue</button><a
