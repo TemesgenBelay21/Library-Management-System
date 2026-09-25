@@ -53,10 +53,54 @@ final class AdminController extends Controller
         ]);
     }
 
+    public function createBook(array $params = []): string
+    {
+        $book = new Book();
+        $old = array_merge([
+            'title' => '',
+            'author' => '',
+            'isbn' => '',
+            'category' => '',
+            'description' => '',
+            'total_copies' => 1,
+            'shelf_location' => '',
+            'published_year' => '',
+        ], $this->pullBookOld());
+
+        return $this->render('admin/books/create', [
+            'pageTitle' => 'Add book',
+            'pageDescription' => 'Add a title to the AuraLib catalog.',
+            'book' => $old,
+            'categories' => $book->categories(),
+            'errors' => $this->pullBookErrors(),
+            'flashMessages' => $this->pullFlashMessages(),
+        ]);
+    }
+
     private function catalogTextQuery(string $key, string $default = ''): string
     {
         $value = $this->query($key, $default);
 
         return is_string($value) ? trim($value) : $default;
+    }
+
+    private function pullBookErrors(): array
+    {
+        $errors = isset($_SESSION['book_errors']) && is_array($_SESSION['book_errors'])
+            ? $_SESSION['book_errors']
+            : [];
+        unset($_SESSION['book_errors']);
+
+        return $errors;
+    }
+
+    private function pullBookOld(): array
+    {
+        $old = isset($_SESSION['book_old']) && is_array($_SESSION['book_old'])
+            ? $_SESSION['book_old']
+            : [];
+        unset($_SESSION['book_old']);
+
+        return $old;
     }
 }

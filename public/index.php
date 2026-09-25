@@ -149,6 +149,7 @@ $routes = [
     ['method' => 'GET', 'path' => 'dashboard', 'controller' => 'AuthController', 'action' => 'dashboard'],
     ['method' => 'GET', 'path' => 'admin', 'controller' => 'AdminController', 'action' => 'dashboard'],
     ['method' => 'GET', 'path' => 'admin/books', 'controller' => 'AdminController', 'action' => 'books'],
+    ['method' => 'GET', 'path' => 'admin/books/create', 'controller' => 'AdminController', 'action' => 'createBook'],
     ['method' => 'GET', 'path' => 'admin/books/search', 'controller' => 'AdminController', 'action' => 'searchBooks'],
     ['method' => 'POST', 'path' => 'admin/books', 'controller' => 'AdminController', 'action' => 'storeBook'],
     ['method' => 'POST', 'path' => 'admin/books/{id}', 'controller' => 'AdminController', 'action' => 'updateBook'],
