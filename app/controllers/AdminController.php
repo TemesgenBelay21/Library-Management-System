@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../models/Report.php';
 require_once __DIR__ . '/../models/Book.php';
+require_once __DIR__ . '/../models/Transaction.php';
+require_once __DIR__ . '/../models/User.php';
 require_once __DIR__ . '/../services/BookCoverStorage.php';
 
 final class AdminController extends Controller
@@ -388,6 +390,156 @@ final class AdminController extends Controller
         ]);
     }
 
+    public function transactions(array $params = []): string
+    {
+        $transactionModel = new Transaction();
+        $transactionModel->refreshOverdueStatuses();
+        $filters = [
+            'q' => $this->catalogTextQuery('q'),
+            'status' => $this->catalogTextQuery('status'),
+            'sort' => $this->catalogTextQuery('sort'),
+            'page' => max(1, (int) $this->catalogTextQuery('page', '1')),
+        ];
+
+        return $this->render('admin/transactions/index', [
+            'pageTitle' => 'Transactions',
+            'pageDescription' => 'Monitor loans, returns, and circulation activity.',
+            'transactions' => $transactionModel->paginate($filters),
+            'statistics' => $transactionModel->statistics(),
+            'filters' => $filters,
+            'flashMessages' => $this->pullFlashMessages(),
+        ]);
+    }
+
+    public function issueForm(array $params = []): string
+    {
+        $transactionModel = new Transaction();
+        $bookQuery = $this->catalogTextQuery('book');
+        $memberQuery = $this->catalogTextQuery('member');
+
+        return $this->render('admin/transactions/issue', [
+            'pageTitle' => 'Issue a book',
+            'pageDescription' => 'Create a circulation record for an active member.',
+            'books' => $transactionModel->issueableBooks($bookQuery),
+            'members' => (new User())->searchActiveMembers($memberQuery),
+            'bookQuery' => $bookQuery,
+            'memberQuery' => $memberQuery,
+            'errors' => $this->pullTransactionErrors(),
+            'old' => $this->pullTransactionOld(),
+            'flashMessages' => $this->pullFlashMessages(),
+        ]);
+    }
+
+    public function issueBook(array $params = []): string
+    {
+        if (strtoupper($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
+            return $this->redirect(url('admin/transactions/issue'));
+        }
+
+        if (!$this->verifyCsrfToken($this->post('_token'))) {
+            $this->flash('danger', 'The issue form expired. Please try again.');
+
+            return $this->redirect(url('admin/transactions/issue'));
+        }
+
+        $bookId = $this->integerInput('book_id');
+        $memberId = $this->integerInput('member_id');
+        $loanDays = $this->integerInput('loan_days', LOAN_DAYS);
+        $old = ['book_id' => $bookId, 'member_id' => $memberId, 'loan_days' => $loanDays];
+
+        try {
+            $transactionId = (new Transaction())->issue($bookId, $memberId, $this->currentUserId(), $loanDays);
+        } catch (DomainException $exception) {
+            $_SESSION['transaction_errors'] = [$exception->getMessage()];
+            $_SESSION['transaction_old'] = $old;
+
+            return $this->redirect(url('admin/transactions/issue'));
+        }
+
+        $this->flash('success', 'The book was issued successfully.');
+
+        return $this->redirect(url('admin/transactions/' . $transactionId));
+    }
+
+    public function transaction(array $params = []): string
+    {
+        $id = isset($params['id']) ? (int) $params['id'] : 0;
+        $transaction = (new Transaction())->find($id);
+
+        if (!is_array($transaction)) {
+            $this->flash('danger', 'The requested transaction could not be found.');
+
+            return $this->redirect(url('admin/transactions'));
+        }
+
+        return $this->render('admin/transactions/show', [
+            'pageTitle' => 'Transaction #' . $id,
+            'pageDescription' => 'Review loan details and return status.',
+            'transaction' => $transaction,
+            'flashMessages' => $this->pullFlashMessages(),
+        ]);
+    }
+
+    public function overdue(array $params = []): string
+    {
+        $transactionModel = new Transaction();
+        $transactionModel->refreshOverdueStatuses();
+
+        return $this->render('admin/transactions/overdue', [
+            'pageTitle' => 'Overdue watch',
+            'pageDescription' => 'Prioritize late returns and outstanding fines.',
+            'transactions' => $transactionModel->overdueQueue(),
+            'flashMessages' => $this->pullFlashMessages(),
+        ]);
+    }
+
+    public function searchMembers(array $params = []): string
+    {
+        if (strtoupper($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'GET') {
+            return $this->json(['message' => 'Method not allowed.'], 405);
+        }
+
+        return $this->json([
+            'members' => (new User())->searchActiveMembers($this->catalogTextQuery('q')),
+        ]);
+    }
+
+    public function returnBook(array $params = []): string
+    {
+        if (strtoupper($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
+            return $this->redirect(url('admin/transactions'));
+        }
+
+        $id = isset($params['id']) ? (int) $params['id'] : 0;
+
+        if (!$this->verifyCsrfToken($this->post('_token'))) {
+            $this->flash('danger', 'The return form expired. Please try again.');
+
+            return $this->redirect(url('admin/transactions/' . $id));
+        }
+
+        try {
+            $result = (new Transaction())->markReturned($id);
+        } catch (DomainException $exception) {
+            $this->flash('warning', $exception->getMessage());
+
+            return $this->redirect(url('admin/transactions/' . $id));
+        }
+
+        if ($result === null) {
+            $this->flash('danger', 'The requested transaction could not be found.');
+
+            return $this->redirect(url('admin/transactions'));
+        }
+
+        $fine = (float) $result['fine_amount'];
+        $this->flash('success', $fine > 0
+            ? 'Book returned. A $' . number_format($fine, 2) . ' late fine was recorded.'
+            : 'Book returned successfully.');
+
+        return $this->redirect(url('admin/transactions/' . $id));
+    }
+
     private function bookFormData(): array
     {
         $isbn = strtoupper((string) preg_replace('/[\s-]+/', '', $this->bookPost('isbn')));
@@ -498,6 +650,26 @@ final class AdminController extends Controller
             ? $_SESSION['book_old']
             : [];
         unset($_SESSION['book_old']);
+
+        return $old;
+    }
+
+    private function pullTransactionErrors(): array
+    {
+        $errors = isset($_SESSION['transaction_errors']) && is_array($_SESSION['transaction_errors'])
+            ? $_SESSION['transaction_errors']
+            : [];
+        unset($_SESSION['transaction_errors']);
+
+        return $errors;
+    }
+
+    private function pullTransactionOld(): array
+    {
+        $old = isset($_SESSION['transaction_old']) && is_array($_SESSION['transaction_old'])
+            ? $_SESSION['transaction_old']
+            : [];
+        unset($_SESSION['transaction_old']);
 
         return $old;
     }

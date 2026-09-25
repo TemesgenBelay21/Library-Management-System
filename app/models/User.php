@@ -67,6 +67,29 @@ final class User extends Model
         );
     }
 
+    public function searchActiveMembers(string $query = '', int $limit = 8): array
+    {
+        $limit = max(1, min(20, $limit));
+        $query = trim($query);
+        $parameters = [];
+        $searchSql = '';
+
+        if ($query !== '') {
+            $searchSql = ' AND (name LIKE :name_search OR email LIKE :email_search)';
+            $parameters['name_search'] = '%' . $query . '%';
+            $parameters['email_search'] = '%' . $query . '%';
+        }
+
+        return $this->fetchAll(
+            "SELECT id, name, email
+             FROM users
+             WHERE role = 'member' AND status = 'active'" . $searchSql . '
+             ORDER BY name ASC
+             LIMIT ' . $limit,
+            $parameters
+        );
+    }
+
     public function emailExists(string $email): bool
     {
         return (int) $this->fetchValue(

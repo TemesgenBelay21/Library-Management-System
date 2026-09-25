@@ -1,0 +1,53 @@
+<?php
+
+declare(strict_types=1);
+
+$old = array_merge(['book_id' => 0, 'member_id' => 0, 'loan_days' => LOAN_DAYS], $old);
+?>
+<section class="page-header">
+    <div>
+        <span class="eyebrow">Circulation control</span>
+        <h1 class="page-title">Issue a book</h1>
+        <p class="page-subtitle">Assign an available copy to an active member.</p>
+    </div>
+    <div class="page-actions"><a class="button button-secondary" href="<?= url('admin/transactions') ?>">Back to
+            transactions</a></div>
+</section>
+
+<?php if ($errors !== []): ?>
+    <div class="flash-stack" aria-live="polite">
+        <?php foreach ($errors as $error): ?>
+            <div class="alert alert-danger">
+                <?= htmlspecialchars((string) $error, ENT_QUOTES, 'UTF-8') ?>
+            </div>
+        <?php endforeach; ?>
+    </div>
+<?php endif; ?>
+
+<section class="glass-panel form-panel">
+    <form method="post" action="<?= url('admin/transactions/issue') ?>" class="stack-form">
+        <input type="hidden" name="_token" value="<?= htmlspecialchars($csrfToken, ENT_QUOTES, 'UTF-8') ?>">
+        <label class="form-field"><span>Book</span><select class="form-control" name="book_id" required>
+                <option value="">Choose an available book</option>
+                <?php foreach ($books as $book): ?>
+                    <option value="<?= (int) $book['id'] ?>" <?= (int) $old['book_id'] === (int) $book['id'] ? ' selected' : '' ?>>
+                        <?= htmlspecialchars((string) $book['title'], ENT_QUOTES, 'UTF-8') ?> ·
+                        <?= (int) $book['available_copies'] ?> available
+                    </option>
+                <?php endforeach; ?>
+            </select></label>
+        <label class="form-field"><span>Member</span><select class="form-control" name="member_id" required>
+                <option value="">Choose an active member</option>
+                <?php foreach ($members as $member): ?>
+                    <option value="<?= (int) $member['id'] ?>" <?= (int) $old['member_id'] === (int) $member['id'] ? ' selected' : '' ?>>
+                        <?= htmlspecialchars((string) $member['name'], ENT_QUOTES, 'UTF-8') ?> ·
+                        <?= htmlspecialchars((string) $member['email'], ENT_QUOTES, 'UTF-8') ?>
+                    </option>
+                <?php endforeach; ?>
+            </select></label>
+        <label class="form-field"><span>Loan period in days</span><input class="form-control" type="number"
+                name="loan_days" min="1" max="365" value="<?= (int) $old['loan_days'] ?>" required></label>
+        <div class="form-actions"><button class="button button-primary" type="submit">Confirm issue</button><a
+                class="button button-ghost" href="<?= url('admin/transactions') ?>">Cancel</a></div>
+    </form>
+</section>

@@ -159,6 +159,7 @@ $routes = [
     ['method' => 'GET', 'path' => 'admin/transactions', 'controller' => 'AdminController', 'action' => 'transactions'],
     ['method' => 'GET', 'path' => 'admin/transactions/issue', 'controller' => 'AdminController', 'action' => 'issueForm'],
     ['method' => 'POST', 'path' => 'admin/transactions/issue', 'controller' => 'AdminController', 'action' => 'issueBook'],
+    ['method' => 'GET', 'path' => 'admin/transactions/{id}', 'controller' => 'AdminController', 'action' => 'transaction'],
     ['method' => 'GET', 'path' => 'admin/transactions/overdue', 'controller' => 'AdminController', 'action' => 'overdue'],
     ['method' => 'GET', 'path' => 'admin/members/search', 'controller' => 'AdminController', 'action' => 'searchMembers'],
     ['method' => 'POST', 'path' => 'admin/transactions/{id}/return', 'controller' => 'AdminController', 'action' => 'returnBook'],
