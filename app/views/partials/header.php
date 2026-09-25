@@ -47,13 +47,16 @@ $contextUrl = $role === 'admin' ? url('admin/transactions') : url('member/histor
                     <?= htmlspecialchars($status, ENT_QUOTES, 'UTF-8') ?>
                 </span>
             </div>
-            <a class="icon-button" href="<?= url('logout.php') ?>" aria-label="Sign out">
-                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-                    <path d="M10 17l5-5-5-5"></path>
-                    <path d="M15 12H3"></path>
-                    <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
-                </svg>
-            </a>
+            <form class="logout-form" method="post" action="<?= url('logout.php') ?>">
+                <input type="hidden" name="_token" value="<?= htmlspecialchars((string) ($csrfToken ?? ''), ENT_QUOTES, 'UTF-8') ?>">
+                <button class="icon-button" type="submit" aria-label="Sign out">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                        <path d="M10 17l5-5-5-5"></path>
+                        <path d="M15 12H3"></path>
+                        <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
+                    </svg>
+                </button>
+            </form>
         </div>
     </div>
 </header>
