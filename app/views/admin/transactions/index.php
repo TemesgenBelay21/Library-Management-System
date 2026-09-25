@@ -5,6 +5,30 @@ declare(strict_types=1);
 $items = $transactions['items'];
 $status = (string) ($filters['status'] ?? '');
 $query = (string) ($filters['q'] ?? '');
+$sort = (string) ($filters['sort'] ?? '');
+$page = (int) $transactions['page'];
+$lastPage = (int) $transactions['last_page'];
+$windowStart = max(1, $page - 2);
+$windowEnd = min($lastPage, $windowStart + 4);
+$windowStart = max(1, $windowEnd - 4);
+$transactionUrl = function (array $overrides = []) use ($query, $status, $sort, $page): string {
+    $params = [
+        'q' => $query,
+        'status' => $status,
+        'sort' => $sort,
+        'page' => $page,
+    ];
+
+    foreach ($overrides as $key => $value) {
+        if ($value === null || $value === '') {
+            unset($params[$key]);
+        } else {
+            $params[$key] = $value;
+        }
+    }
+
+    return url('admin/transactions') . '?' . http_build_query($params);
+};
 ?>
 <section class="page-header">
     <div>
@@ -59,11 +83,32 @@ $query = (string) ($filters['q'] ?? '');
                 <option value="returned" <?= $status === 'returned' ? ' selected' : '' ?>>Returned</option>
             </select>
         </label>
+        <label>
+            <span class="sr-only">Sort transactions</span>
+            <select class="form-control" name="sort">
+                <option value="" <?= $sort === '' ? ' selected' : '' ?>>Newest first</option>
+                <option value="oldest" <?= $sort === 'oldest' ? ' selected' : '' ?>>Oldest first</option>
+                <option value="due_soon" <?= $sort === 'due_soon' ? ' selected' : '' ?>>Due soonest</option>
+                <option value="title" <?= $sort === 'title' ? ' selected' : '' ?>>Book title</option>
+                <option value="member" <?= $sort === 'member' ? ' selected' : '' ?>>Member name</option>
+            </select>
+        </label>
         <button class="button button-primary filter-submit" type="submit">Filter</button>
     </form>
 </section>
 
 <section class="glass-panel dashboard-panel">
+    <?php if ($items !== []) : ?>
+        <div class="catalog-results-heading">
+            <div>
+                <span class="section-kicker">Results</span>
+                <p>
+                    Showing <?= number_format((int) $transactions['from']) ?>–<?= number_format((int) $transactions['to']) ?> of
+                    <?= number_format((int) $transactions['total']) ?>
+                </p>
+            </div>
+        </div>
+    <?php endif; ?>
     <div class="table-wrap">
         <table class="data-table">
             <thead>
@@ -111,5 +156,26 @@ $query = (string) ($filters['q'] ?? '');
             <h3>No transactions found</h3>
             <p>Issue a book or adjust the filters to see circulation activity.</p>
         </div>
+    <?php endif; ?>
+    <?php if ($lastPage > 1) : ?>
+        <nav class="pagination-wrap" aria-label="Transaction pages">
+            <?php if ($page > 1) : ?>
+                <a class="pagination-link" href="<?= htmlspecialchars($transactionUrl(['page' => $page - 1]), ENT_QUOTES, 'UTF-8') ?>" aria-label="Previous page">←</a>
+            <?php else : ?>
+                <span class="pagination-link is-disabled" aria-disabled="true">←</span>
+            <?php endif; ?>
+            <?php for ($pageNumber = $windowStart; $pageNumber <= $windowEnd; $pageNumber++) : ?>
+                <?php if ($pageNumber === $page) : ?>
+                    <span class="pagination-link is-current" aria-current="page"><?= $pageNumber ?></span>
+                <?php else : ?>
+                    <a class="pagination-link" href="<?= htmlspecialchars($transactionUrl(['page' => $pageNumber]), ENT_QUOTES, 'UTF-8') ?>"><?= $pageNumber ?></a>
+                <?php endif; ?>
+            <?php endfor; ?>
+            <?php if ($page < $lastPage) : ?>
+                <a class="pagination-link" href="<?= htmlspecialchars($transactionUrl(['page' => $page + 1]), ENT_QUOTES, 'UTF-8') ?>" aria-label="Next page">→</a>
+            <?php else : ?>
+                <span class="pagination-link is-disabled" aria-disabled="true">→</span>
+            <?php endif; ?>
+        </nav>
     <?php endif; ?>
 </section>
