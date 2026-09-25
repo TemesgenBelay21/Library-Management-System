@@ -7,7 +7,7 @@ $currentRoute = '/' . trim((string) $currentRoute, '/');
 $appBasePath = parse_url(APP_URL, PHP_URL_PATH);
 $appBasePath = is_string($appBasePath) ? '/' . trim($appBasePath, '/') : '';
 
-if ($appBasePath !== '/' && strpos($currentRoute, $appBasePath) === 0) {
+if ($appBasePath !== '' && $appBasePath !== '/' && strpos($currentRoute, $appBasePath) === 0) {
     $currentRoute = '/' . ltrim(substr($currentRoute, strlen($appBasePath)), '/');
 }
 
