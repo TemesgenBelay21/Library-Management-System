@@ -184,7 +184,7 @@ foreach ($dashboard['circulationTrend'] as $trend) {
         </div>
         <div class="overdue-heading-actions">
             <span class="overdue-total"><strong><?= number_format($overdueCount) ?></strong> open</span>
-            <a class="text-link" href="<?= url('admin/overdue') ?>">Review queue <span aria-hidden="true">→</span></a>
+            <a class="text-link" href="<?= url('admin/transactions/overdue') ?>">Review queue <span aria-hidden="true">→</span></a>
         </div>
     </header>
     <?php if ($dashboard['overdueTransactions'] === []) : ?>
