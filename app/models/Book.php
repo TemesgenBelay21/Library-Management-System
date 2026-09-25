@@ -198,6 +198,30 @@ final class Book extends Model
         );
     }
 
+    public function activeBorrowers(int $id): array
+    {
+        if ($id < 1) {
+            return [];
+        }
+
+        return $this->fetchAll(
+            'SELECT
+                transactions.id,
+                transactions.status,
+                transactions.issued_at,
+                transactions.due_at,
+                transactions.fine_amount,
+                users.name AS member_name,
+                users.email AS member_email
+             FROM transactions
+             INNER JOIN users ON users.id = transactions.user_id
+             WHERE transactions.book_id = :book_id
+               AND transactions.status IN (\'issued\', \'overdue\')
+             ORDER BY transactions.due_at ASC, transactions.id ASC',
+            ['book_id' => $id]
+        );
+    }
+
     public function find(int $id): ?array
     {
         if ($id < 1) {

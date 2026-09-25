@@ -111,6 +111,31 @@ final class AdminController extends Controller
         return $this->redirect(url('admin/books/' . $bookId));
     }
 
+    public function book(array $params = []): string
+    {
+        $id = isset($params['id']) ? (int) $params['id'] : 0;
+        $bookModel = new Book();
+        $book = $bookModel->find($id);
+
+        if (!is_array($book)) {
+            $this->flash('danger', 'The requested book could not be found.');
+
+            return $this->redirect(url('admin/books'));
+        }
+
+        return $this->render('admin/books/show', [
+            'pageTitle' => (string) $book['title'],
+            'pageDescription' => 'Catalog record and circulation status.',
+            'book' => $book,
+            'activeBorrowers' => $bookModel->activeBorrowers($id),
+            'borrowedCopies' => max(0, (int) $book['total_copies'] - (int) $book['available_copies']),
+            'availabilityRate' => (int) $book['total_copies'] > 0
+                ? (int) round((int) $book['available_copies'] / (int) $book['total_copies'] * 100)
+                : 0,
+            'flashMessages' => $this->pullFlashMessages(),
+        ]);
+    }
+
     public function updateBook(array $params = []): string
     {
         if (strtoupper($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
