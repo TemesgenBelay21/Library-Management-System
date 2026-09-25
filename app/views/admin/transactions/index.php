@@ -114,12 +114,12 @@ $transactionUrl = function (array $overrides = []) use ($query, $status, $sort, 
         <table class="data-table">
             <thead>
                 <tr>
-                    <th>Book</th>
-                    <th>Member</th>
-                    <th>Status</th>
-                    <th>Due</th>
-                    <th>Fine</th>
-                    <th></th>
+                    <th scope="col">Book</th>
+                    <th scope="col">Member</th>
+                    <th scope="col">Status</th>
+                    <th scope="col">Due</th>
+                    <th scope="col">Fine</th>
+                    <th scope="col"><span class="sr-only">Actions</span></th>
                 </tr>
             </thead>
             <tbody>

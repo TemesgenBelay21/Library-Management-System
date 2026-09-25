@@ -253,12 +253,12 @@ foreach ($dashboard['circulationTrend'] as $trend) {
             <table class="data-table">
                 <thead>
                     <tr>
-                        <th>Book</th>
-                        <th>Member</th>
-                        <th>Issued</th>
-                        <th>Due</th>
-                        <th>Status</th>
-                        <th><span class="sr-only">Action</span></th>
+                        <th scope="col">Book</th>
+                        <th scope="col">Member</th>
+                        <th scope="col">Issued</th>
+                        <th scope="col">Due</th>
+                        <th scope="col">Status</th>
+                        <th scope="col"><span class="sr-only">Action</span></th>
                     </tr>
                 </thead>
                 <tbody>

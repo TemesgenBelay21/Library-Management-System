@@ -24,11 +24,11 @@ declare(strict_types=1);
         <table class="data-table">
             <thead>
                 <tr>
-                    <th>Book</th>
-                    <th>Issued</th>
-                    <th>Due</th>
-                    <th>Status</th>
-                    <th>Fine</th>
+                    <th scope="col">Book</th>
+                    <th scope="col">Issued</th>
+                    <th scope="col">Due</th>
+                    <th scope="col">Status</th>
+                    <th scope="col">Fine</th>
                 </tr>
             </thead>
             <tbody>
