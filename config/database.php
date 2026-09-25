@@ -16,7 +16,7 @@ final class Database
         $port = self::env('DB_PORT', '3306');
         $database = self::env('DB_NAME');
         $username = self::env('DB_USERNAME');
-        $password = self::env('DB_PASSWORD');
+        $password = self::env('DB_PASSWORD', '');
 
         $validatedPort = filter_var($port, FILTER_VALIDATE_INT, [
             'options' => [
@@ -59,11 +59,11 @@ final class Database
     {
         $value = getenv($key);
 
-        if ($value === false && $default !== null) {
-            return $default;
-        }
-
         if ($value === false || trim($value) === '') {
+            if ($default !== null) {
+                return $default;
+            }
+
             throw new RuntimeException(
                 sprintf('Required environment variable %s is not configured.', $key)
             );

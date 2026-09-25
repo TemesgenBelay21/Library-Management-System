@@ -64,6 +64,10 @@ CREATE TABLE IF NOT EXISTS transactions (
         ON UPDATE CASCADE ON DELETE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- Demo accounts for local development only.
+--   admin@auralib.local  / Admin@12345
+--   member@auralib.local / Member@12345
+-- Remove or rehash these rows before deploying to a live environment.
 INSERT IGNORE INTO users (name, email, password, role, status) VALUES
-    ('Aura Administrator', 'admin@auralib.local', '$2y$10$yTALni4OP2coGqPPln57ZeTrWbn4RtuekmwUHU8GCS.S8vE3Hjs0C', 'admin', 'active'),
-    ('Aura Member', 'member@auralib.local', '$2y$10$VuBpTFo0q1x0XH4WvEeSQuhaF7NXtKKCg7JrVfG6OoaBYhswbtO4K', 'member', 'active');
+    ('Aura Administrator', 'admin@auralib.local', '$2y$10$Tv/vB7wYcz8gEewtx2KNSuvF6911.tE6STiJYc9.Zw3dx7OJ/6TQi', 'admin', 'active'),
+    ('Aura Member', 'member@auralib.local', '$2y$10$YdxeWXgIvkH9aOizAK8FdOlItA6uuU.3/qkHevf7CgUymuQTLaFpS', 'member', 'active');

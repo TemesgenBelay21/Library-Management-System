@@ -2,6 +2,10 @@
 
 declare(strict_types=1);
 
+require_once __DIR__ . '/env.php';
+
+Environment::load(dirname(__DIR__) . DIRECTORY_SEPARATOR . '.env');
+
 $appUrl = getenv('APP_URL');
 $appUrl = is_string($appUrl) ? rtrim(trim($appUrl), '/') : '';
 $appEnvironment = getenv('APP_ENV');

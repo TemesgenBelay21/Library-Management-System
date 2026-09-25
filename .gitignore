@@ -1,0 +1,12 @@
+# Local environment configuration (never commit this file).
+.env
+
+# Editor and operating system noise.
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+*.swp
+
+# Runtime logs.
+*.log
