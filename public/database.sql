@@ -62,3 +62,7 @@ CREATE TABLE IF NOT EXISTS transactions (
         FOREIGN KEY (issued_by) REFERENCES users (id)
         ON UPDATE CASCADE ON DELETE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+INSERT IGNORE INTO users (name, email, password, role, status) VALUES
+    ('Aura Administrator', 'admin@auralib.local', '$2y$10$yTALni4OP2coGqPPln57ZeTrWbn4RtuekmwUHU8GCS.S8vE3Hjs0C', 'admin', 'active'),
+    ('Aura Member', 'member@auralib.local', '$2y$10$VuBpTFo0q1x0XH4WvEeSQuhaF7NXtKKCg7JrVfG6OoaBYhswbtO4K', 'member', 'active');
