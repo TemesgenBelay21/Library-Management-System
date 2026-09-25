@@ -1037,44 +1037,6 @@ textarea.form-control {
     font-weight: 650;
 }
 
-.pagination {
-    display: flex;
-    margin-top: 20px;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-}
-
-.pagination-meta {
-    color: var(--muted);
-    font-size: 0.75rem;
-}
-
-.pagination-links {
-    display: flex;
-    gap: 7px;
-}
-
-.pagination-link {
-    display: grid;
-    min-width: 36px;
-    height: 36px;
-    padding: 0 9px;
-    place-items: center;
-    border: 1px solid var(--border);
-    border-radius: 9px;
-    background: rgba(255, 255, 255, 0.025);
-    color: var(--muted);
-    font-size: 0.75rem;
-}
-
-.pagination-link:hover,
-.pagination-link.is-active {
-    border-color: rgba(139, 92, 246, 0.32);
-    background: var(--primary-soft);
-    color: var(--primary-bright);
-}
-
 .drawer,
 .modal {
     position: fixed;
