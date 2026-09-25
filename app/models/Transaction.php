@@ -324,17 +324,31 @@ final class Transaction extends Model
 
             $insertStatement = $database->prepare(
                 "INSERT INTO transactions
-                    (book_id, user_id, issued_by, issued_at, due_at, status, fine_amount)
+                    (book_id, user_id, issued_by, issued_at, due_at, status, fine_amount, active_loan_key)
                  VALUES
-                    (:book_id, :user_id, :issued_by, :issued_at, :due_at, 'issued', 0.00)"
+                    (:book_id, :user_id, :issued_by, :issued_at, :due_at, 'issued', 0.00, :active_loan_key)"
             );
-            $insertStatement->execute([
-                'book_id' => $bookId,
-                'user_id' => $userId,
-                'issued_by' => $issuedBy,
-                'issued_at' => $issuedAt->format('Y-m-d H:i:s'),
-                'due_at' => $dueAt->format('Y-m-d H:i:s'),
-            ]);
+            try {
+                $insertStatement->execute([
+                    'book_id' => $bookId,
+                    'user_id' => $userId,
+                    'issued_by' => $issuedBy,
+                    'issued_at' => $issuedAt->format('Y-m-d H:i:s'),
+                    'due_at' => $dueAt->format('Y-m-d H:i:s'),
+                    'active_loan_key' => $bookId . ':' . $userId,
+                ]);
+            } catch (PDOException $exception) {
+                if ((string) $exception->getCode() === '23000') {
+                    throw new DomainException(sprintf(
+                        '%s already has an active loan for "%s".',
+                        (string) $member['name'],
+                        (string) $book['title']
+                    ));
+                }
+
+                throw $exception;
+            }
+
             $transactionId = (int) $database->lastInsertId();
 
             $this->syncBookInventory($database, $bookId);
@@ -386,7 +400,8 @@ final class Transaction extends Model
                 "UPDATE transactions
                  SET returned_at = :returned_at,
                      status = 'returned',
-                     fine_amount = :fine_amount
+                     fine_amount = :fine_amount,
+                     active_loan_key = NULL
                  WHERE id = :id"
             );
             $updateStatement->execute([

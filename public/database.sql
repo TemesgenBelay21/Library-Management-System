@@ -47,9 +47,11 @@ CREATE TABLE IF NOT EXISTS transactions (
     returned_at DATETIME NULL,
     status ENUM('issued', 'returned', 'overdue') NOT NULL DEFAULT 'issued',
     fine_amount DECIMAL(10, 2) NOT NULL DEFAULT 0.00,
+    active_loan_key VARCHAR(32) NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (id),
+    UNIQUE KEY transactions_active_loan_unique (active_loan_key),
     KEY transactions_user_status_index (user_id, status),
     KEY transactions_book_status_index (book_id, status),
     KEY transactions_due_status_index (due_at, status),
@@ -63,6 +65,18 @@ CREATE TABLE IF NOT EXISTS transactions (
         FOREIGN KEY (issued_by) REFERENCES users (id)
         ON UPDATE CASCADE ON DELETE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Migration for databases created before the active-loan guard was added.
+-- MySQL permits many NULL values in a UNIQUE index, so returned loans never
+-- collide; only open loans carry a key and are therefore de-duplicated.
+-- ALTER TABLE `transactions`
+--     ADD COLUMN `active_loan_key` VARCHAR(32) NULL AFTER `fine_amount`,
+--     ADD UNIQUE KEY `transactions_active_loan_unique` (`active_loan_key`);
+
+-- Backfill the guard for loans that were already open before the migration.
+-- UPDATE `transactions`
+-- SET `active_loan_key` = CONCAT(`book_id`, ':', `user_id`)
+-- WHERE `status` IN ('issued', 'overdue') AND `active_loan_key` IS NULL;
 
 -- Demo accounts for local development only.
 --   admin@auralib.local  / Admin@12345
