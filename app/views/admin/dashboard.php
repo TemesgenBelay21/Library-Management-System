@@ -176,6 +176,64 @@ foreach ($dashboard['circulationTrend'] as $trend) {
     </article>
 </section>
 
+<section class="glass-panel dashboard-panel overdue-panel">
+    <header class="panel-heading">
+        <div>
+            <span class="section-kicker danger-kicker">Immediate follow-up</span>
+            <h2>Overdue pressure</h2>
+        </div>
+        <div class="overdue-heading-actions">
+            <span class="overdue-total"><strong><?= number_format($overdueCount) ?></strong> open</span>
+            <a class="text-link" href="<?= url('admin/overdue') ?>">Review queue <span aria-hidden="true">→</span></a>
+        </div>
+    </header>
+    <?php if ($dashboard['overdueTransactions'] === []) : ?>
+        <div class="overdue-clear">
+            <span class="overdue-clear-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>
+            </span>
+            <div>
+                <strong>Circulation is on track</strong>
+                <p>No loans are currently past their return date.</p>
+            </div>
+        </div>
+    <?php else : ?>
+        <div class="overdue-list">
+            <?php foreach ($dashboard['overdueTransactions'] as $overdue) : ?>
+                <?php
+                $daysOverdue = max(1, (int) $overdue['days_overdue']);
+                $severity = $daysOverdue >= 14 ? 'critical' : ($daysOverdue >= 7 ? 'high' : 'watch');
+                $memberName = trim((string) $overdue['member_name']);
+                $initials = implode('', array_map(static function (string $part): string {
+                    return strtoupper(substr($part, 0, 1));
+                }, array_slice(preg_split('/\s+/', $memberName, -1, PREG_SPLIT_NO_EMPTY) ?: [], 0, 2)));
+                $dueTimestamp = strtotime((string) $overdue['due_at']);
+                ?>
+                <article class="overdue-item overdue-<?= $severity ?>">
+                    <span class="member-avatar" aria-hidden="true"><?= htmlspecialchars($initials !== '' ? $initials : 'M', ENT_QUOTES, 'UTF-8') ?></span>
+                    <div class="overdue-book">
+                        <strong><?= htmlspecialchars((string) $overdue['title'], ENT_QUOTES, 'UTF-8') ?></strong>
+                        <span><?= htmlspecialchars((string) $overdue['author'], ENT_QUOTES, 'UTF-8') ?></span>
+                    </div>
+                    <div class="overdue-member">
+                        <span>Borrower</span>
+                        <strong><?= htmlspecialchars($memberName, ENT_QUOTES, 'UTF-8') ?></strong>
+                    </div>
+                    <div class="overdue-due">
+                        <span>Due date</span>
+                        <strong><?= $dueTimestamp ? date(DISPLAY_DATE_FORMAT, $dueTimestamp) : 'Unknown' ?></strong>
+                    </div>
+                    <div class="overdue-delay">
+                        <strong><?= $daysOverdue ?> <?= $daysOverdue === 1 ? 'day' : 'days' ?></strong>
+                        <span><?= (float) $overdue['fine_amount'] > 0 ? '$' . number_format((float) $overdue['fine_amount'], 2) . ' fine' : 'Review now' ?></span>
+                    </div>
+                    <a class="table-action" href="<?= url('admin/transactions/' . (int) $overdue['id']) ?>" aria-label="Review overdue transaction <?= (int) $overdue['id'] ?>">→</a>
+                </article>
+            <?php endforeach; ?>
+        </div>
+    <?php endif; ?>
+</section>
+
 <section class="glass-panel dashboard-panel recent-panel">
     <header class="panel-heading">
         <div>

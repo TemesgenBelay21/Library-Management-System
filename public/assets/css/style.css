@@ -1807,8 +1807,155 @@ textarea.form-control {
     padding: 24px;
 }
 
+.overdue-panel,
 .recent-panel {
     margin-top: 18px;
+}
+
+.danger-kicker {
+    color: #fb7185;
+}
+
+.overdue-heading-actions {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.overdue-total {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 5px;
+    color: var(--muted);
+    font-size: 0.68rem;
+}
+
+.overdue-total strong {
+    color: #fb7185;
+    font-size: 1.15rem;
+}
+
+.overdue-list {
+    display: grid;
+    gap: 8px;
+}
+
+.overdue-item {
+    --overdue-color: #fbbf24;
+    display: grid;
+    grid-template-columns: 40px minmax(150px, 1.35fr) minmax(130px, 0.9fr) minmax(120px, 0.8fr) minmax(90px, 0.55fr) 30px;
+    align-items: center;
+    gap: 14px;
+    min-height: 66px;
+    padding: 10px 12px;
+    border: 1px solid rgba(251, 191, 36, 0.1);
+    border-radius: var(--radius-md);
+    background: rgba(255, 255, 255, 0.018);
+    transition: transform var(--transition), border-color var(--transition), background var(--transition);
+}
+
+.overdue-item:hover {
+    transform: scale(1.04);
+    border-color: color-mix(in srgb, var(--overdue-color) 24%, transparent);
+    background: color-mix(in srgb, var(--overdue-color) 4%, rgba(255, 255, 255, 0.018));
+}
+
+.overdue-high {
+    --overdue-color: #fb923c;
+}
+
+.overdue-critical {
+    --overdue-color: #fb7185;
+}
+
+.member-avatar {
+    display: grid;
+    width: 38px;
+    height: 38px;
+    place-items: center;
+    border: 1px solid color-mix(in srgb, var(--overdue-color) 22%, transparent);
+    border-radius: 12px;
+    background: color-mix(in srgb, var(--overdue-color) 8%, transparent);
+    color: var(--overdue-color);
+    font-size: 0.68rem;
+    font-weight: 750;
+}
+
+.overdue-book,
+.overdue-member,
+.overdue-due,
+.overdue-delay {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.overdue-book strong,
+.overdue-member strong,
+.overdue-due strong {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.75rem;
+}
+
+.overdue-book span,
+.overdue-member span,
+.overdue-due span,
+.overdue-delay span {
+    overflow: hidden;
+    color: var(--muted);
+    font-size: 0.64rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.overdue-delay {
+    align-items: flex-end;
+}
+
+.overdue-delay strong {
+    color: var(--overdue-color);
+    font-size: 0.78rem;
+}
+
+.overdue-clear {
+    display: flex;
+    min-height: 108px;
+    padding: 24px;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    border: 1px dashed rgba(52, 211, 153, 0.18);
+    border-radius: var(--radius-md);
+    background: rgba(52, 211, 153, 0.025);
+}
+
+.overdue-clear-icon {
+    display: grid;
+    width: 42px;
+    height: 42px;
+    flex: 0 0 auto;
+    place-items: center;
+    border-radius: 50%;
+    background: var(--success-soft);
+    color: var(--success);
+}
+
+.overdue-clear-icon svg {
+    width: 20px;
+    height: 20px;
+}
+
+.overdue-clear strong {
+    font-size: 0.84rem;
+}
+
+.overdue-clear p {
+    margin-top: 4px;
+    color: var(--muted);
+    font-size: 0.72rem;
 }
 
 .panel-heading {
@@ -2030,6 +2177,15 @@ textarea.form-control {
     .dashboard-grid {
         grid-template-columns: 1fr;
     }
+
+    .overdue-item {
+        grid-template-columns: 40px minmax(150px, 1fr) minmax(100px, 0.5fr) 30px;
+    }
+
+    .overdue-member,
+    .overdue-due {
+        display: none;
+    }
 }
 
 @media (max-width: 640px) {
@@ -2066,6 +2222,23 @@ textarea.form-control {
     .panel-heading {
         align-items: stretch;
         flex-direction: column;
+    }
+
+    .overdue-heading-actions {
+        justify-content: space-between;
+    }
+
+    .overdue-item {
+        grid-template-columns: 36px minmax(0, 1fr) 30px;
+        gap: 10px;
+    }
+
+    .overdue-delay {
+        display: none;
+    }
+
+    .overdue-clear {
+        padding: 20px 14px;
     }
 
     .chart-legend {
